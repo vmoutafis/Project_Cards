@@ -65,7 +65,7 @@ void ACZCard::DrawCard(int handIndex, FTransform initialTransform)
 	
 	m_isDrawing = true;
 	
-	Delegate_OnDrawn.Broadcast();
+	Delegate_OnDrawn.Broadcast(this);
 }
 
 void ACZCard::DiscardCard()
@@ -79,7 +79,7 @@ void ACZCard::DiscardCard()
 	m_isDiscarding = true;
 	m_isCardActive = false;
 	
-	Delegate_OnDiscard.Broadcast();
+	Delegate_OnDiscard.Broadcast(this);
 }
 
 void ACZCard::AdjustHand(int handIndex, FTransform initialTransform)
@@ -143,7 +143,7 @@ void ACZCard::TryStopMoving()
 	if (m_isDrawing)
 	{
 		m_isDrawing = false;
-		Delegate_OnDrawComplete.Broadcast();
+		Delegate_OnDrawComplete.Broadcast(this);
 	}
 
 	if (m_isDiscarding)
