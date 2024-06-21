@@ -43,12 +43,16 @@ void ACZPlayerPawn::ShuffleDeck()
 	TArray<ACZCard*> shuffleDeck;
 
 	const size_t deckSize = m_deck.Num();
+	
 	for (size_t i = 0; i < deckSize; ++i)
 	{
 		const size_t random = FMath::RandRange(0, m_deck.Num() - 1);
 
 		if (m_deck.IsValidIndex(random))
+		{
 			shuffleDeck.Add(m_deck[random]);
+			m_deck.RemoveAt(random);
+		}
 	}
 
 	m_deck = shuffleDeck;
@@ -111,11 +115,13 @@ void ACZPlayerPawn::AddCardToDeck(ACZCard* card)
 ACZCard* ACZPlayerPawn::RemoveCardFromDeck(int index)
 {
 	if (!m_deck.IsValidIndex(index))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no valid index in deck (%i), deck size: %i"), index, m_deck.Num())
 		return nullptr;
+	}
 
 	ACZCard* cardRef = m_deck[index];
-
-	m_deck.RemoveAt(index);
+	m_deck.Remove(cardRef);
 
 	Delegate_OnDeckChanged.Broadcast();
 
@@ -127,19 +133,20 @@ ACZCard* ACZPlayerPawn::DrawCardFromDeck(int deckIndex)
 	if (GetHandSize() >= MaxHandSize)
 		return nullptr;
 
-	if (const auto& cardRef = RemoveCardFromDeck(deckIndex))
-	{
-		AddCardToHand(cardRef);
-		
-		return cardRef;
-	}
+	auto cardRef = RemoveCardFromDeck(deckIndex);
+	
+	if (!IsValid(cardRef))
+		return nullptr;
 
-	return nullptr;
+	AddCardToHand(cardRef);
+		
+	return cardRef;
 }
 
 int ACZPlayerPawn::AddCardToHand(ACZCard* card)
 {
 	const size_t index = m_hand.Add(card);
+	
 	HandChanged();
 
 	return static_cast<int>(index);
@@ -183,7 +190,7 @@ void ACZPlayerPawn::SpaceCardsInHand()
 		return;
 
 	const float halfSplineLength = HandSpline->GetSplineLength() / 2.0f;
-	const float halfHandSize = static_cast<float>(GetHandSize()) / 2.0f;
+	const float halfHandSize = FMath::Max(static_cast<float>(GetHandSize() - 1), 1.0f) / 2.0f;
 	
 	for (size_t i = 0; i < m_hand.Num(); ++i)
 	{
@@ -196,10 +203,12 @@ void ACZPlayerPawn::SpaceCardsInHand()
 			
 			if (FMath::Abs(spacing) > halfSplineLength)
 			{
+				spacing = 0.0f;
+				distanceOnSpline = 0.0f;
 				handSpacing = HandSpline->GetSplineLength() / static_cast<float>(GetHandSize());
 			}
 			
-			spacing += handSpacing * i;
+			spacing += handSpacing * static_cast<float>(i);
 			distanceOnSpline += spacing;
 		}
 
@@ -217,7 +226,7 @@ void ACZPlayerPawn::SpaceCardsInHand()
 		
 		newTransform.SetRotation(newRotation.Quaternion());
 		
-		m_hand[i]->DrawCard(i, newTransform);
+		m_hand[i]->SetHand(i, newTransform);
 	}
 }
 
@@ -236,28 +245,26 @@ void ACZPlayerPawn::DrawMultipleCards(int num)
 
 void ACZPlayerPawn::DrawNextCard()
 {
-	if (const auto& cardRef = DrawCardFromDeck(0))
+	auto cardRef = DrawCardFromDeck(0);
+	
+	if (!IsValid(cardRef))
 	{
-		cardRef->Delegate_OnDrawComplete.AddDynamic(this, &ACZPlayerPawn::TryDrawNextCard);
-		return;
+		ReshuffleDeck();
+		cardRef = DrawCardFromDeck(0);
 	}
 
-	ReshuffleDeck();
+	if (!IsValid(cardRef))
+		return;
 	
-	if (const auto& cardRef = DrawCardFromDeck(0)){
-		cardRef->Delegate_OnDrawComplete.AddDynamic(this, &ACZPlayerPawn::TryDrawNextCard);
-	}
+	GetWorldTimerManager().SetTimer(TH_DrawTimer, this, &ACZPlayerPawn::TryDrawNextCard, 0.2f, false);
 }
 
-void ACZPlayerPawn::TryDrawNextCard(ACZCard* previousCard)
+void ACZPlayerPawn::TryDrawNextCard()
 {
-	if (IsValid(previousCard))
-	{
-		m_cardsToDraw--;
-		previousCard->Delegate_OnDrawComplete.RemoveDynamic(this, &ACZPlayerPawn::TryDrawNextCard);
-	}
+	if (m_cardsToDraw <= 0)
+		return;		
 
-	if (m_cardsToDraw > 0)
-		DrawNextCard();
+	m_cardsToDraw--;
+	DrawNextCard();
 }
 

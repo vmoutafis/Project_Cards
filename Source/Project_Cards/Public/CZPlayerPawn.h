@@ -103,7 +103,7 @@ private:
 	void DrawNextCard();
 
 	UFUNCTION()
-	void TryDrawNextCard(ACZCard* previousCard = nullptr);
+	void TryDrawNextCard();
 	
 public:
 	UPROPERTY(EditDefaultsOnly, Category=Components)
@@ -151,4 +151,7 @@ private:
 
 	// cards to draw when multi
 	int m_cardsToDraw;
+
+	// timer to draw the next card
+	FTimerHandle TH_DrawTimer;
 };

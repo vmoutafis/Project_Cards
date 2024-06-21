@@ -27,9 +27,10 @@ ACZCard::ACZCard()
 	m_isMoving = false;
 	m_useOffsetTransform = false;
 	m_handIndex = -1;
-	m_isCardActive = false;
 	CardName = "Card Name";
 	Cost = 5;
+	m_cardActive = false;
+	m_cardUsed = false;
 }
 
 FTransform ACZCard::GetCurrentTransform() const
@@ -42,7 +43,7 @@ FTransform ACZCard::GetCurrentTransform() const
 
 void ACZCard::ToggleHighlight(const bool highlight)
 {
-	if (!m_isCardActive)
+	if (m_isDragging)
 		return;
 	
 	if (highlight)
@@ -57,59 +58,47 @@ void ACZCard::ToggleHighlight(const bool highlight)
 	Delegate_OnHighlightChanged.Broadcast(this, m_handIndex);
 }
 
-void ACZCard::DrawCard(int handIndex, const FTransform& initialTransform)
+void ACZCard::SetHand(int handIndex, const FTransform& initialTransform)
 {
-	AdjustHand(handIndex, initialTransform);
-
-	if (m_isCardActive)
-		return;
+	m_useOffsetTransform = false;
 	
-	m_isDrawing = true;
-
-	SetActorHiddenInGame(false);
-	
-	Delegate_OnDrawn.Broadcast(this);
-}
-
-void ACZCard::DiscardCard()
-{
-	ToggleHighlight(false);
-	ToggleOffsetTransform(false);
-	m_meshTransform = m_defaultMeshTransform;
-
-	m_handTransform.SetLocation(m_handTransform.GetLocation() + FVector(0.0f, 0.0f, 100.0f));
-	m_handTransform.SetScale3D(FVector(0.0f));
-	m_isDiscarding = true;
-	m_isCardActive = false;
-	
-	Delegate_OnDiscard.Broadcast(this);
-}
-
-void ACZCard::AdjustHand(int handIndex, const FTransform& initialTransform)
-{
 	SetHandIndex(handIndex);
 	m_handTransform = initialTransform;
+	m_meshTransform = m_defaultMeshTransform;
+	SetActorHiddenInGame(false);
+	m_cardActive = true;
 }
 
 bool ACZCard::DragCard(const FVector location)
 {
-	if (!GetCardActive())
+	if (m_cardUsed)
 		return false;
 
-	if (!IsCardBeingDragged())
-	{
-		ToggleHighlight(false);
-		ToggleOffsetTransform(true);
-	}
-
-	m_offsetTransform.SetLocation(location);
+	ToggleHighlight(false);
 	
+	m_useOffsetTransform = true;
+
+	m_offsetTransform = FTransform();
+	m_offsetTransform.SetLocation(location);
+
+	m_isDragging = true;
+
 	return true;
+}
+
+void ACZCard::EndDragCard()
+{
+	if (m_cardUsed)
+		return;
+
+	m_useOffsetTransform = false;
+	m_offsetTransform = FTransform();
+	m_isDragging = false;
 }
 
 bool ACZCard::TryUseCard(AActor* actorHit, const FVector locationHit)
 {
-	if (!GetCardActive())
+	if (m_cardUsed)
 		return false;
 
 	m_hitActor = actorHit;
@@ -120,15 +109,28 @@ bool ACZCard::TryUseCard(AActor* actorHit, const FVector locationHit)
 	return true;
 }
 
+void ACZCard::NotifyActorBeginCursorOver()
+{
+	Super::NotifyActorBeginCursorOver();
+
+	ToggleHighlight(true);
+}
+
+void ACZCard::NotifyActorEndCursorOver()
+{
+	Super::NotifyActorEndCursorOver();
+
+	ToggleHighlight(false);
+}
+
 // Called when the game starts or when spawned
 void ACZCard::BeginPlay()
 {
 	Super::BeginPlay();
 
+	m_defaultMeshTransform = Mesh->GetRelativeTransform(); 
+	
 	ResetCard();
-
-	if (IsValid(Mesh))
-		m_defaultMeshTransform = Mesh->GetRelativeTransform();
 }
 
 void ACZCard::TryStartMoving()
@@ -144,20 +146,6 @@ void ACZCard::TryStopMoving()
 {
 	if (!m_isMoving)
 		return;
-
-	if (m_isDrawing)
-	{
-		m_isDrawing = false;
-		m_isCardActive = true;
-		Delegate_OnDrawComplete.Broadcast(this);
-	}
-
-	if (m_isDiscarding)
-	{
-		m_isDiscarding = false;
-		ResetCard();
-		Delegate_OnDiscardComplete.Broadcast(this);
-	}
 	
 	m_isMoving = false;
 	OnStopMoving();
@@ -165,8 +153,6 @@ void ACZCard::TryStopMoving()
 
 void ACZCard::ResetCard()
 {
-	m_isCardActive = false;
-	
 	// reset the hand transform to offscreen
 	m_handTransform.SetLocation(FVector(0.0f, 0.0f, -1000.0f));
 	m_handTransform.SetRotation(FRotator(0.0f).Quaternion());
@@ -184,6 +170,7 @@ void ACZCard::ResetCard()
 	
 	SetActorTransform(m_handTransform);
 	Mesh->SetRelativeTransform(m_meshTransform);
+	m_cardActive = false;
 }
 
 void ACZCard::HandleActorInterp()
@@ -208,7 +195,7 @@ void ACZCard::HandleMeshInterp() const
 	if (!IsValid(Mesh))
 		return;
 
-	if (Mesh->GetRelativeTransform().Equals(m_meshTransform))
+	if (Mesh->GetRelativeTransform().Equals(m_meshTransform, 0.01f))
 		return;
 
 	const FTransform newTransform = UKismetMathLibrary::TInterpTo(
@@ -222,6 +209,9 @@ void ACZCard::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (!m_cardActive)
+		return;
+	
 	HandleActorInterp();
 	HandleMeshInterp();
 }
