@@ -81,14 +81,14 @@ public:
 
 	// draw the card
 	UFUNCTION(BlueprintCallable, Category=Draw)
-	void DrawCard(int handIndex, FTransform initialTransform);
+	void DrawCard(int handIndex, const FTransform& initialTransform);
 
 	// discard the card from the hand
 	UFUNCTION(BlueprintCallable, Category=Draw)
 	void DiscardCard();
 
 	// update the hand position and index
-	void AdjustHand(int handIndex, FTransform initialTransform);
+	void AdjustHand(int handIndex, const FTransform&  initialTransform);
 
 	// is the card drawing
 	UFUNCTION(BlueprintPure, Category=Draw)
@@ -161,6 +161,9 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Card)
 	TArray<UCZEffectAsset*> CardEffects;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Card)
+	int Cost;
 	
 	// transform of the card while dragging for interp
 	FTransform m_offsetTransform;

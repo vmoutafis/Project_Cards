@@ -66,10 +66,10 @@ void ACZPlayerPawn::DrawHand(bool initialDraw)
 	m_firstDraw = false;
 }
 
-void ACZPlayerPawn::StartBattle(TArray<TSubclassOf<ACZCard>> deck)
+void ACZPlayerPawn::StartTurn()
 {
-	CreateDeck(deck);
-	DrawHand(true);
+	UE_LOG(LogTemp, Warning, TEXT("Start turn, first draw: %d"), m_firstDraw);
+	DrawHand(m_firstDraw);
 }
 
 void ACZPlayerPawn::ReshuffleDeck()
@@ -94,8 +94,8 @@ void ACZPlayerPawn::CreateDeck(TArray<TSubclassOf<ACZCard>> deck)
 			FRotator(0.0f),
 			params
 		);
-		
-		cardRef->SetActorHiddenInGame(true);
+
+		AddCardToDeck(cardRef);
 	}
 
 	ShuffleDeck();
@@ -129,10 +129,9 @@ ACZCard* ACZPlayerPawn::DrawCardFromDeck(int deckIndex)
 
 	if (const auto& cardRef = RemoveCardFromDeck(deckIndex))
 	{
-		const int cardIndex = AddCardToHand(cardRef);
-		SpaceCardsInHand();
+		AddCardToHand(cardRef);
 		
-		return m_deck[cardIndex];
+		return cardRef;
 	}
 
 	return nullptr;
@@ -141,7 +140,6 @@ ACZCard* ACZPlayerPawn::DrawCardFromDeck(int deckIndex)
 int ACZPlayerPawn::AddCardToHand(ACZCard* card)
 {
 	const size_t index = m_hand.Add(card);
-
 	HandChanged();
 
 	return static_cast<int>(index);
@@ -168,7 +166,7 @@ ACZCard* ACZPlayerPawn::RemoveCardFromHand(int index)
 	ACZCard* cardRef = m_hand[index];
 
 	m_hand.RemoveAt(index);
-
+	
 	HandChanged();
 	
 	return cardRef;
@@ -176,7 +174,7 @@ ACZCard* ACZPlayerPawn::RemoveCardFromHand(int index)
 
 void ACZPlayerPawn::HandChanged()
 {
-	
+	SpaceCardsInHand();
 }
 
 void ACZPlayerPawn::SpaceCardsInHand()
@@ -186,9 +184,8 @@ void ACZPlayerPawn::SpaceCardsInHand()
 
 	const float halfSplineLength = HandSpline->GetSplineLength() / 2.0f;
 	const float halfHandSize = static_cast<float>(GetHandSize()) / 2.0f;
-	uint64 index = 0;
 	
-	for (const auto& cardRef : m_hand)
+	for (size_t i = 0; i < m_hand.Num(); ++i)
 	{
 		float distanceOnSpline = halfSplineLength;
 
@@ -202,7 +199,7 @@ void ACZPlayerPawn::SpaceCardsInHand()
 				handSpacing = HandSpline->GetSplineLength() / static_cast<float>(GetHandSize());
 			}
 			
-			spacing += handSpacing * index;
+			spacing += handSpacing * i;
 			distanceOnSpline += spacing;
 		}
 
@@ -220,14 +217,19 @@ void ACZPlayerPawn::SpaceCardsInHand()
 		
 		newTransform.SetRotation(newRotation.Quaternion());
 		
-		cardRef->DrawCard(index, newTransform);
-		
-		++index;
+		m_hand[i]->DrawCard(i, newTransform);
 	}
 }
 
 void ACZPlayerPawn::DrawMultipleCards(int num)
 {
+	if (IsDeckEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Can't draw multiple cards deck is empty"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Drawing multiple cards: %i"), num);
 	m_cardsToDraw = num;
 	TryDrawNextCard();
 }
@@ -242,8 +244,9 @@ void ACZPlayerPawn::DrawNextCard()
 
 	ReshuffleDeck();
 	
-	if (const auto& cardRef = DrawCardFromDeck(0))
+	if (const auto& cardRef = DrawCardFromDeck(0)){
 		cardRef->Delegate_OnDrawComplete.AddDynamic(this, &ACZPlayerPawn::TryDrawNextCard);
+	}
 }
 
 void ACZPlayerPawn::TryDrawNextCard(ACZCard* previousCard)
@@ -256,12 +259,5 @@ void ACZPlayerPawn::TryDrawNextCard(ACZCard* previousCard)
 
 	if (m_cardsToDraw > 0)
 		DrawNextCard();
-}
-
-// Called every frame
-void ACZPlayerPawn::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 

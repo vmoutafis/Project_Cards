@@ -22,19 +22,8 @@ public:
 	// Sets default values for this pawn's properties
 	ACZPlayerPawn();
 
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
 	UPROPERTY(BlueprintAssignable, Category=Deck)
 	FOnDeckChanged Delegate_OnDeckChanged;
-
-	// shuffle the cards in the deck
-	UFUNCTION(BlueprintCallable, Category=Deck)
-	void ShuffleDeck();
-
-	// draw the players hand
-	UFUNCTION(BlueprintCallable, Category=Deck)
-	void DrawHand(bool initialDraw = false);
 
 	// check if the deck is empty
 	UFUNCTION(BlueprintPure, Category=Deck)
@@ -60,14 +49,22 @@ public:
 	UFUNCTION(BlueprintPure, Category=Deck)
 	int GetDiscardSize() const { return m_discardDeck.Num(); }
 
-	// run at the start of the battle
-	UFUNCTION(BlueprintCallable, Category=Battle)
-	void StartBattle(TArray<TSubclassOf<ACZCard>> deck);
-
 	// add discard back into deck and shuffle
 	void ReshuffleDeck();
 	
 protected:
+	// shuffle the cards in the deck
+	UFUNCTION(BlueprintCallable, Category=Deck)
+	void ShuffleDeck();
+
+	// draw the players hand
+	UFUNCTION(BlueprintCallable, Category=Deck)
+	void DrawHand(bool initialDraw = false);
+	
+	// run at the start of the battle
+	UFUNCTION(BlueprintCallable, Category=Battle)
+	void StartTurn();
+	
 	// create a deck out of a class array
 	UFUNCTION(BlueprintCallable, Category=Deck)
 	void CreateDeck(TArray<TSubclassOf<ACZCard>> deck);

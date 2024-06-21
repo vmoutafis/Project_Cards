@@ -25,10 +25,11 @@ ACZCard::ACZCard()
 	HitBox->SetBoxExtent(Mesh->Bounds.BoxExtent);
 	
 	m_isMoving = false;
-	ToggleOffsetTransform(false);
+	m_useOffsetTransform = false;
 	m_handIndex = -1;
 	m_isCardActive = false;
 	CardName = "Card Name";
+	Cost = 5;
 }
 
 FTransform ACZCard::GetCurrentTransform() const
@@ -56,14 +57,16 @@ void ACZCard::ToggleHighlight(const bool highlight)
 	Delegate_OnHighlightChanged.Broadcast(this, m_handIndex);
 }
 
-void ACZCard::DrawCard(int handIndex, FTransform initialTransform)
+void ACZCard::DrawCard(int handIndex, const FTransform& initialTransform)
 {
-	AdjustHand(handIndex, std::move(initialTransform));
-	
+	AdjustHand(handIndex, initialTransform);
+
 	if (m_isCardActive)
 		return;
 	
 	m_isDrawing = true;
+
+	SetActorHiddenInGame(false);
 	
 	Delegate_OnDrawn.Broadcast(this);
 }
@@ -82,10 +85,10 @@ void ACZCard::DiscardCard()
 	Delegate_OnDiscard.Broadcast(this);
 }
 
-void ACZCard::AdjustHand(int handIndex, FTransform initialTransform)
+void ACZCard::AdjustHand(int handIndex, const FTransform& initialTransform)
 {
 	SetHandIndex(handIndex);
-	m_handTransform = std::move(initialTransform);
+	m_handTransform = initialTransform;
 }
 
 bool ACZCard::DragCard(const FVector location)
@@ -122,6 +125,8 @@ void ACZCard::BeginPlay()
 {
 	Super::BeginPlay();
 
+	ResetCard();
+
 	if (IsValid(Mesh))
 		m_defaultMeshTransform = Mesh->GetRelativeTransform();
 }
@@ -143,6 +148,7 @@ void ACZCard::TryStopMoving()
 	if (m_isDrawing)
 	{
 		m_isDrawing = false;
+		m_isCardActive = true;
 		Delegate_OnDrawComplete.Broadcast(this);
 	}
 
@@ -150,6 +156,7 @@ void ACZCard::TryStopMoving()
 	{
 		m_isDiscarding = false;
 		ResetCard();
+		Delegate_OnDiscardComplete.Broadcast(this);
 	}
 	
 	m_isMoving = false;
@@ -172,6 +179,8 @@ void ACZCard::ResetCard()
 
 	// reset the mesh transforms
 	m_meshTransform = m_defaultMeshTransform;
+
+	SetActorHiddenInGame(true);
 	
 	SetActorTransform(m_handTransform);
 	Mesh->SetRelativeTransform(m_meshTransform);
