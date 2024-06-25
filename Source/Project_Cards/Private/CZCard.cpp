@@ -32,6 +32,8 @@ ACZCard::ACZCard()
 	m_cardActive = false;
 	m_cardUsed = false;
 	DebugHit = false;
+	m_handInterpSpeed = 10.0f;
+	m_offsetInterpSpeed = 25.0f;
 }
 
 FTransform ACZCard::GetCurrentTransform() const
@@ -47,7 +49,7 @@ void ACZCard::ToggleHighlight(const bool highlight)
 	if (m_isDragging)
 		return;
 	
-	if (highlight)
+	if (highlight && !m_cardUsed)
 	{
 		const FVector newPosition = FVector(0.0f, 0.0f, 50.0f);
 		m_meshTransform.SetLocation(newPosition);
@@ -64,7 +66,7 @@ void ACZCard::SetHand(int handIndex, const FTransform& initialTransform)
 	m_useOffsetTransform = false;
 	
 	SetHandIndex(handIndex);
-	m_handTransform = initialTransform;
+	TransformCardActor(initialTransform);
 	m_meshTransform = m_defaultMeshTransform;
 	SetActorHiddenInGame(false);
 	m_cardActive = true;
@@ -77,44 +79,40 @@ bool ACZCard::DragCard(const FVector location)
 
 	ToggleHighlight(false);
 	
-	m_useOffsetTransform = true;
+	FTransform dragTransform = FTransform();
+	dragTransform.SetLocation(location);
 
-	m_offsetTransform = FTransform();
-	m_offsetTransform.SetLocation(location);
+	TransformCardOffset(dragTransform);
 
 	m_isDragging = true;
 
 	return true;
 }
 
-void ACZCard::EndDragCard()
+bool ACZCard::EndDragCard()
 {
 	if (m_cardUsed)
-		return;
+		return false;
 
+	m_isDragging = false;
+	
 	FHitResult hit;
 	const FVector endTrace = GetActorLocation() + GetActorForwardVector() * 10000.0f;
 	const FCollisionShape shape = FCollisionShape::MakeBox(HitBox->GetScaledBoxExtent());
 	
 	if (GetWorld()->SweepSingleByChannel(hit, GetActorLocation(), endTrace, GetActorRotation().Quaternion(), EnemyDetection, shape))
 	{
-		DrawDebugBox(GetWorld(), hit.ImpactPoint, shape.GetBox(), FColor::Green, false, 3.0f);
+		if (DebugHit)
+			DrawDebugBox(GetWorld(), hit.ImpactPoint, shape.GetBox(), FColor::Green, false, 3.0f);
 
 		if (hit.GetActor() != GetOwner())
-			TryUseCard(hit.GetActor(), hit.ImpactPoint);
-		else
-		{
-			m_useOffsetTransform = false;
-			m_offsetTransform = FTransform();
-		}
-	}
-	else
-	{
-		m_useOffsetTransform = false;
-		m_offsetTransform = FTransform();
+			if (TryUseCard(hit.GetActor(), hit.ImpactPoint))
+				return true;
 	}
 
-	m_isDragging = false;
+	ToggleOffsetTransform(false);
+
+	return false;
 }
 
 bool ACZCard::TryUseCard(AActor* actorHit, const FVector locationHit)
@@ -129,6 +127,20 @@ bool ACZCard::TryUseCard(AActor* actorHit, const FVector locationHit)
 	OnCardActivated();
 	
 	return true;
+}
+
+void ACZCard::TransformCardActor(FTransform newTransform, float speed)
+{
+	m_handInterpSpeed = speed;
+	ToggleOffsetTransform(false);
+	m_handTransform = newTransform;
+}
+
+void ACZCard::TransformCardOffset(FTransform newTransform, float speed)
+{
+	m_offsetInterpSpeed = speed;
+	ToggleOffsetTransform(true);
+	m_offsetTransform = newTransform;
 }
 
 // Called when the game starts or when spawned
@@ -189,9 +201,9 @@ void ACZCard::HandleActorInterp()
 
 	TryStartMoving();
 
-	float speed = 10.0f;
+	float speed = m_handInterpSpeed;
 	if (m_useOffsetTransform)
-		speed = 25.0f;
+		speed = m_offsetInterpSpeed;
 	
 	const FTransform newTransform = UKismetMathLibrary::TInterpTo(
 		GetActorTransform(), GetCurrentTransform(), GetWorld()->GetDeltaSeconds(), speed);
@@ -223,5 +235,11 @@ void ACZCard::Tick(float DeltaTime)
 	
 	HandleActorInterp();
 	HandleMeshInterp();
+}
+
+void ACZCard::ToggleOffsetTransform(const bool enable)
+{
+	m_offsetTransform = FTransform();
+	m_useOffsetTransform = enable;
 }
 

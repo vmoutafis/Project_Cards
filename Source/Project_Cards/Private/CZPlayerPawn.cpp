@@ -150,7 +150,10 @@ void ACZPlayerPawn::StopDraggingCard()
 	m_shouldDragCard = false;
 
 	if (IsValid(m_hoveredCard))
-		m_hoveredCard->EndDragCard();
+	{
+		if (m_hoveredCard->EndDragCard())
+			DiscardFromHand(m_hoveredCard->GetHandIndex());
+	}
 
 	HoverHand();
 }
@@ -263,7 +266,7 @@ void ACZPlayerPawn::SpaceCardsInHand()
 	const float halfSplineLength = HandSpline->GetSplineLength() / 2.0f;
 	const float halfHandSize = FMath::Max(static_cast<float>(GetHandSize() - 1), 1.0f) / 2.0f;
 	
-	for (size_t i = 0; i < m_hand.Num(); ++i)
+	for (size_t i = 0; i < GetHandSize(); ++i)
 	{
 		float distanceOnSpline = halfSplineLength;
 
@@ -284,11 +287,11 @@ void ACZPlayerPawn::SpaceCardsInHand()
 		}
 
 		// update location
-		FTransform newTransform;
+		FTransform newTransform = FTransform();
 		newTransform.SetLocation(HandSpline->GetLocationAtDistanceAlongSpline(distanceOnSpline, ESplineCoordinateSpace::World));
 
 		// update rotation
-		FRotator newRotation;
+		FRotator newRotation = FRotator::ZeroRotator;
 		newRotation.Roll = HandSpline->GetRotationAtDistanceAlongSpline(distanceOnSpline, ESplineCoordinateSpace::World).Pitch * -2.0f;
 		if (GetHandSize() > 1)
 		{
@@ -296,7 +299,7 @@ void ACZPlayerPawn::SpaceCardsInHand()
 		}
 		
 		newTransform.SetRotation(newRotation.Quaternion());
-		
+
 		m_hand[i]->SetHand(i, newTransform);
 	}
 }

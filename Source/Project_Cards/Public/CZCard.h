@@ -27,7 +27,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	// toggle whether or not to use the offset transform
-	void ToggleOffsetTransform(const bool enable) { m_useOffsetTransform = enable; }
+	void ToggleOffsetTransform(const bool enable);
 
 	// is the card moving
 	UFUNCTION(BlueprintPure, Category=Hand)
@@ -60,18 +60,28 @@ public:
 	bool DragCard(const FVector location);
 
 	UFUNCTION(BlueprintCallable, Category=Card)
-	void EndDragCard();
+	bool EndDragCard();
 
 	UFUNCTION(BlueprintCallable, Category=Card)
 	bool TryUseCard(AActor* actorHit, const FVector locationHit);
 
 	// actor that has been hit by the card
 	// null if card missed or hasn't been used
+	UFUNCTION(BlueprintPure, Category=Card)
 	AActor* GetHitActor() const { return m_hitActor; }
 
 	// location the actor hit
 	// 0 if card missed or hasn't been used
+	UFUNCTION(BlueprintPure, Category=Card)
 	FVector GetHitLocation() const { return m_hitLocation; }
+
+	// transform the card using the actor card interp
+	UFUNCTION(BlueprintCallable, Category=Card)
+	void TransformCardActor(FTransform newTransform, float speed = 10.0f);
+	
+	// transform the card using the interp
+	UFUNCTION(BlueprintCallable, Category=Card)
+	void TransformCardOffset(FTransform newTransform, float speed = 25.0f);
 	
 protected:
 	// Called when the game starts or when spawned
@@ -86,6 +96,7 @@ protected:
 	void OnStopMoving();
 
 	// out of hand card settings
+	UFUNCTION(BlueprintCallable, Category=Card)
 	void ResetCard();
 
 	// card was successfully activated
@@ -169,4 +180,10 @@ private:
 
 	// is the card dragging
 	bool m_isDragging;
+
+	// speed of the offset transform interp
+	float m_offsetInterpSpeed;
+
+	// speed of the hand transform interp
+	float m_handInterpSpeed;
 };
