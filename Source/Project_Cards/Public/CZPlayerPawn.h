@@ -51,6 +51,16 @@ public:
 
 	// add discard back into deck and shuffle
 	void ReshuffleDeck();
+
+	// on mouse move test cards underneath
+	UFUNCTION(BlueprintCallable, Category=Hand)
+	void HoverHand();
+
+	UFUNCTION(BlueprintCallable, Category=Hand)
+	void TryDragCard();
+
+	UFUNCTION(BlueprintCallable, Category=Hand)
+	void StopDraggingCard();
 	
 protected:
 	// shuffle the cards in the deck
@@ -104,6 +114,8 @@ private:
 
 	UFUNCTION()
 	void TryDrawNextCard();
+
+	void HandleCardDrag();
 	
 public:
 	UPROPERTY(EditDefaultsOnly, Category=Components)
@@ -124,6 +136,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category=Components)
 	UBoxComponent* CardField;
 
+protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Hand)
 	int MaxHandSize;
 
@@ -132,6 +145,15 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Hand)
 	float HandSpacing;
+
+	UPROPERTY(EditDefaultsOnly, Category=Hand)
+	TEnumAsByte<ETraceTypeQuery> CardDetectChannel;
+
+	UPROPERTY(EditDefaultsOnly, Category=Hand)
+	TEnumAsByte<ETraceTypeQuery> FieldDetectChannel;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Hand)
+	bool DebugHand;
 	
 private:
 	// deck of cards
@@ -154,4 +176,11 @@ private:
 
 	// timer to draw the next card
 	FTimerHandle TH_DrawTimer;
+
+	// card that is currently hovered
+	UPROPERTY()
+	ACZCard* m_hoveredCard;
+
+	// if hovered card is set should drag card will drag the hovered card
+	bool m_shouldDragCard;
 };

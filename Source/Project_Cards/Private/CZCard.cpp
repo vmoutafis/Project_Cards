@@ -31,6 +31,7 @@ ACZCard::ACZCard()
 	Cost = 5;
 	m_cardActive = false;
 	m_cardUsed = false;
+	DebugHit = false;
 }
 
 FTransform ACZCard::GetCurrentTransform() const
@@ -48,7 +49,7 @@ void ACZCard::ToggleHighlight(const bool highlight)
 	
 	if (highlight)
 	{
-		const FVector newPosition = FVector(-50.0f, 0.0f, 50.0f);
+		const FVector newPosition = FVector(0.0f, 0.0f, 50.0f);
 		m_meshTransform.SetLocation(newPosition);
 	}
 	else
@@ -91,8 +92,28 @@ void ACZCard::EndDragCard()
 	if (m_cardUsed)
 		return;
 
-	m_useOffsetTransform = false;
-	m_offsetTransform = FTransform();
+	FHitResult hit;
+	const FVector endTrace = GetActorLocation() + GetActorForwardVector() * 10000.0f;
+	const FCollisionShape shape = FCollisionShape::MakeBox(HitBox->GetScaledBoxExtent());
+	
+	if (GetWorld()->SweepSingleByChannel(hit, GetActorLocation(), endTrace, GetActorRotation().Quaternion(), EnemyDetection, shape))
+	{
+		DrawDebugBox(GetWorld(), hit.ImpactPoint, shape.GetBox(), FColor::Green, false, 3.0f);
+
+		if (hit.GetActor() != GetOwner())
+			TryUseCard(hit.GetActor(), hit.ImpactPoint);
+		else
+		{
+			m_useOffsetTransform = false;
+			m_offsetTransform = FTransform();
+		}
+	}
+	else
+	{
+		m_useOffsetTransform = false;
+		m_offsetTransform = FTransform();
+	}
+
 	m_isDragging = false;
 }
 
@@ -103,24 +124,11 @@ bool ACZCard::TryUseCard(AActor* actorHit, const FVector locationHit)
 
 	m_hitActor = actorHit;
 	m_hitLocation = locationHit;
+	m_cardUsed = true;
 
 	OnCardActivated();
 	
 	return true;
-}
-
-void ACZCard::NotifyActorBeginCursorOver()
-{
-	Super::NotifyActorBeginCursorOver();
-
-	ToggleHighlight(true);
-}
-
-void ACZCard::NotifyActorEndCursorOver()
-{
-	Super::NotifyActorEndCursorOver();
-
-	ToggleHighlight(false);
 }
 
 // Called when the game starts or when spawned
@@ -171,6 +179,7 @@ void ACZCard::ResetCard()
 	SetActorTransform(m_handTransform);
 	Mesh->SetRelativeTransform(m_meshTransform);
 	m_cardActive = false;
+	m_cardUsed = false;
 }
 
 void ACZCard::HandleActorInterp()

@@ -72,10 +72,6 @@ public:
 	// location the actor hit
 	// 0 if card missed or hasn't been used
 	FVector GetHitLocation() const { return m_hitLocation; }
-
-	virtual void NotifyActorBeginCursorOver() override;
-
-	virtual void NotifyActorEndCursorOver() override;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -136,6 +132,12 @@ public:
 
 	// transform of the relative mesh for interp
 	FTransform m_meshTransform;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Card)
+	TEnumAsByte<ECollisionChannel> EnemyDetection;
+
+	UPROPERTY(EditDefaultsOnly, Category=Card)
+	bool DebugHit;
 	
 private:
 	// determine whether or not to use offset transform

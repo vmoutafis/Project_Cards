@@ -36,6 +36,7 @@ ACZPlayerPawn::ACZPlayerPawn()
 	m_firstDraw = true;
 	HandSpacing = 50.0f;
 	DrawSize = 5;
+	DebugHand = false;
 }
 
 void ACZPlayerPawn::ShuffleDeck()
@@ -85,6 +86,75 @@ void ACZPlayerPawn::ReshuffleDeck()
 	Delegate_OnDeckChanged.Broadcast();
 }
 
+void ACZPlayerPawn::HoverHand()
+{
+	if (m_shouldDragCard)
+	{
+		HandleCardDrag();
+		return;
+	}
+	
+	FHitResult hit;
+	const auto pc = Cast<APlayerController>(GetController());
+	
+	if (!pc->GetHitResultUnderCursorByChannel(CardDetectChannel, false, hit))
+	{		
+		if (!pc->GetHitResultUnderFingerByChannel(ETouchIndex::Touch1, CardDetectChannel, false, hit))
+		{
+			if (IsValid(m_hoveredCard))
+			{
+				m_hoveredCard->ToggleHighlight(false);
+				m_hoveredCard = nullptr;
+			}
+			
+			return;
+		}
+	}
+
+	if (DebugHand)
+		DrawDebugBox(GetWorld(), hit.Location, FVector(5.0f), FColor::Green, false, 3.0f);
+	
+	if (const auto& cardRef = Cast<ACZCard>(hit.GetActor()))
+	{
+		if (IsValid(m_hoveredCard))
+		{
+			if (cardRef != m_hoveredCard)
+				m_hoveredCard->ToggleHighlight(false);
+		}
+
+		m_hoveredCard = cardRef;
+		m_hoveredCard->ToggleHighlight(true);	
+	}
+	else
+	{
+		if (IsValid(m_hoveredCard))
+		{
+			m_hoveredCard->ToggleHighlight(false);
+			m_hoveredCard = nullptr;
+		}
+	}
+}
+
+void ACZPlayerPawn::TryDragCard()
+{
+	HoverHand();
+	
+	if (!IsValid(m_hoveredCard))
+		return;
+
+	m_shouldDragCard = true;
+}
+
+void ACZPlayerPawn::StopDraggingCard()
+{
+	m_shouldDragCard = false;
+
+	if (IsValid(m_hoveredCard))
+		m_hoveredCard->EndDragCard();
+
+	HoverHand();
+}
+
 void ACZPlayerPawn::CreateDeck(TArray<TSubclassOf<ACZCard>> deck)
 {
 	for (const auto& classRef : deck)
@@ -98,6 +168,7 @@ void ACZPlayerPawn::CreateDeck(TArray<TSubclassOf<ACZCard>> deck)
 			FRotator(0.0f),
 			params
 		);
+		cardRef->SetOwner(this);
 
 		AddCardToDeck(cardRef);
 	}
@@ -266,5 +337,25 @@ void ACZPlayerPawn::TryDrawNextCard()
 
 	m_cardsToDraw--;
 	DrawNextCard();
+}
+
+void ACZPlayerPawn::HandleCardDrag()
+{
+	if (!IsValid(m_hoveredCard))
+		return;
+
+	FHitResult hit;
+
+	const auto pc = Cast<APlayerController>(GetController());
+	
+	if (!pc->GetHitResultUnderCursorByChannel(FieldDetectChannel, false, hit))
+	{
+		if (!pc->GetHitResultUnderFingerByChannel(ETouchIndex::Touch1, FieldDetectChannel, false, hit))
+		{
+			return;
+		}
+	}
+
+	m_hoveredCard->DragCard(hit.Location);
 }
 
