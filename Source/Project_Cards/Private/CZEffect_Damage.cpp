@@ -3,6 +3,7 @@
 
 #include "CZEffect_Damage.h"
 
+#include "CZCard.h"
 #include "Kismet/GameplayStatics.h"
 
 UCZEffect_Damage::UCZEffect_Damage()
@@ -29,7 +30,14 @@ void UCZEffect_Damage::OnEffectActivated()
 
 	FHitResult hit;
 	hit.Location = GetSource()->GetActorLocation();
+	hit.ImpactPoint = hit.Location;
 	hit.Normal = -GetSource()->GetActorForwardVector();
+	hit.ImpactNormal = hit.Normal;
+
+	AActor* causer = GetSource();
+	
+	if (Cast<ACZCard>(causer))
+		causer = causer->GetOwner();
 	
 	UGameplayStatics::ApplyPointDamage(
 		GetTarget(),
@@ -37,6 +45,6 @@ void UCZEffect_Damage::OnEffectActivated()
 		GetSource()->GetActorForwardVector(),
 		hit,
 		nullptr,
-		GetSource(),
+		causer,
 		UDamageType::StaticClass());
 }

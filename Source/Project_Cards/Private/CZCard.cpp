@@ -3,6 +3,7 @@
 
 #include "CZCard.h"
 
+#include "CZEffectAsset.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -98,7 +99,7 @@ bool ACZCard::EndDragCard()
 	
 	FHitResult hit;
 	const FVector endTrace = GetActorLocation() + GetActorForwardVector() * 10000.0f;
-	const FCollisionShape shape = FCollisionShape::MakeBox(HitBox->GetScaledBoxExtent());
+	const FCollisionShape shape = FCollisionShape::MakeBox(HitBox->GetScaledBoxExtent() * 0.75f);
 	
 	if (GetWorld()->SweepSingleByChannel(hit, GetActorLocation(), endTrace, GetActorRotation().Quaternion(), EnemyDetection, shape))
 	{
@@ -141,6 +142,18 @@ void ACZCard::TransformCardOffset(FTransform newTransform, float speed)
 	m_offsetInterpSpeed = speed;
 	ToggleOffsetTransform(true);
 	m_offsetTransform = newTransform;
+}
+
+void ACZCard::CompleteActivation()
+{
+	OnActivationComplete();
+	ResetCard();
+}
+
+void ACZCard::ApplyEffects()
+{
+	for (const auto& effect : CardEffects)
+		effect->ActivateEffect(GetHitActor(), this);
 }
 
 // Called when the game starts or when spawned

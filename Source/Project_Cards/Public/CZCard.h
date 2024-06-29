@@ -82,6 +82,15 @@ public:
 	// transform the card using the interp
 	UFUNCTION(BlueprintCallable, Category=Card)
 	void TransformCardOffset(FTransform newTransform, float speed = 25.0f);
+
+	UFUNCTION(BlueprintCallable, Category=Activation)
+	void CompleteActivation();
+
+	UFUNCTION(BlueprintImplementableEvent, Category=Activation)
+	void OnActivationComplete();
+
+	UFUNCTION(BlueprintCallable, Category=Effects)
+	void ApplyEffects();
 	
 protected:
 	// Called when the game starts or when spawned
@@ -117,13 +126,13 @@ private:
 	void TryStopMoving();
 
 public:
-	UPROPERTY(EditDefaultsOnly, Category=Components)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Components)
 	USceneComponent* SceneRoot;
 	
-	UPROPERTY(EditDefaultsOnly, Category=Components)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Components)
 	UStaticMeshComponent* Mesh;
 
-	UPROPERTY(EditDefaultsOnly, Category=Components)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Components)
 	UBoxComponent* HitBox;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Card)

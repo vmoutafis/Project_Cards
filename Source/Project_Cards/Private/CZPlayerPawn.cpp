@@ -171,7 +171,6 @@ void ACZPlayerPawn::CreateDeck(TArray<TSubclassOf<ACZCard>> deck)
 			FRotator(0.0f),
 			params
 		);
-		cardRef->SetOwner(this);
 
 		AddCardToDeck(cardRef);
 	}
