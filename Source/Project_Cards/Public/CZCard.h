@@ -9,6 +9,7 @@
 class UBoxComponent;
 class UCZEffectAsset;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHighlightChanged, AActor*, card, int, handIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnActivateComplete);
 
 UCLASS()
 class PROJECT_CARDS_API ACZCard : public AActor
@@ -43,6 +44,9 @@ public:
 	// updates when toggle highlight runs
 	UPROPERTY(BlueprintAssignable, Category=Highlight)
 	FOnHighlightChanged Delegate_OnHighlightChanged;
+
+	UPROPERTY(BlueprintAssignable, Category=Highlight)
+	FOnActivateComplete Delegate_OnActivateComplete;
 
 	// set the index of the card based on the hand
 	void SetHandIndex(int index) { m_handIndex = index; }
@@ -91,6 +95,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category=Effects)
 	void ApplyEffects();
+
+	void ShrinkToReset();
 	
 protected:
 	// Called when the game starts or when spawned
@@ -195,4 +201,7 @@ private:
 
 	// speed of the hand transform interp
 	float m_handInterpSpeed;
+
+	// card set to reset when shrink complete
+	bool m_shrinkToReset;
 };

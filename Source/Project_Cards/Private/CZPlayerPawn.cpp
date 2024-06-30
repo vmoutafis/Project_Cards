@@ -37,6 +37,19 @@ ACZPlayerPawn::ACZPlayerPawn()
 	HandSpacing = 50.0f;
 	DrawSize = 5;
 	DebugHand = false;
+	m_canInteract = false;
+}
+
+void ACZPlayerPawn::ClearHand()
+{
+	for (const auto& cardRef : m_hand)
+	{
+		cardRef->ShrinkToReset();
+		DiscardCard(cardRef);
+	}
+
+	m_hand.Empty();
+	HandChanged();
 }
 
 void ACZPlayerPawn::ShuffleDeck()
@@ -62,9 +75,6 @@ void ACZPlayerPawn::ShuffleDeck()
 
 void ACZPlayerPawn::DrawHand(bool initialDraw)
 {
-	if (IsDeckEmpty() && IsHandEmpty())
-		ReshuffleDeck();
-
 	// draw cards from deck over time
 	DrawMultipleCards(DrawSize);
 	
@@ -88,6 +98,17 @@ void ACZPlayerPawn::ReshuffleDeck()
 
 void ACZPlayerPawn::HoverHand()
 {
+	if (!m_canInteract)
+	{
+		if (IsValid(m_hoveredCard))
+        {
+        	m_hoveredCard->ToggleHighlight(false);
+        	m_hoveredCard = nullptr;
+        }
+
+		return;
+	}
+	
 	if (m_shouldDragCard)
 	{
 		HandleCardDrag();
@@ -305,12 +326,6 @@ void ACZPlayerPawn::SpaceCardsInHand()
 
 void ACZPlayerPawn::DrawMultipleCards(int num)
 {
-	if (IsDeckEmpty())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Can't draw multiple cards deck is empty"));
-		return;
-	}
-
 	UE_LOG(LogTemp, Warning, TEXT("Drawing multiple cards: %i"), num);
 	m_cardsToDraw = num;
 	TryDrawNextCard();

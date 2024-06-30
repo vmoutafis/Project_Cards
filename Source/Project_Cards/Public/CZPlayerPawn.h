@@ -61,6 +61,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category=Hand)
 	void StopDraggingCard();
+
+	UFUNCTION(BlueprintCallable, Category=Hand)
+	void EnableInteract(bool enable) { m_canInteract = enable; }
+
+	UFUNCTION(BlueprintCallable, Category=Hand)
+	void ClearHand();
 	
 protected:
 	// shuffle the cards in the deck
@@ -183,4 +189,7 @@ private:
 
 	// if hovered card is set should drag card will drag the hovered card
 	bool m_shouldDragCard;
+
+	// if the player can interact with cards
+	bool m_canInteract;
 };
