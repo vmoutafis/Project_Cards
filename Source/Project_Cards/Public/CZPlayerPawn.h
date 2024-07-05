@@ -63,10 +63,13 @@ public:
 	void StopDraggingCard();
 
 	UFUNCTION(BlueprintCallable, Category=Hand)
-	void EnableInteract(bool enable) { m_canInteract = enable; }
+	void EnableInteract(bool enable);
 
 	UFUNCTION(BlueprintCallable, Category=Hand)
 	void ClearHand();
+
+	UFUNCTION(BlueprintImplementableEvent, Category=Hand)
+	void OnCardActivated(int Cost);
 	
 protected:
 	// shuffle the cards in the deck

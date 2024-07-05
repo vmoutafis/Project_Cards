@@ -172,11 +172,24 @@ void ACZPlayerPawn::StopDraggingCard()
 
 	if (IsValid(m_hoveredCard))
 	{
+		int cost = m_hoveredCard->Cost;
+		
 		if (m_hoveredCard->EndDragCard())
+		{
+			OnCardActivated(cost);
 			DiscardFromHand(m_hoveredCard->GetHandIndex());
+		}
 	}
 
 	HoverHand();
+}
+
+void ACZPlayerPawn::EnableInteract(bool enable)
+{
+	m_canInteract = enable;
+
+	if (!m_canInteract)
+		m_hoveredCard = nullptr;
 }
 
 void ACZPlayerPawn::CreateDeck(TArray<TSubclassOf<ACZCard>> deck)

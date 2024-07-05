@@ -164,7 +164,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category=Card)
 	bool DebugHit;
-	
+
 private:
 	// determine whether or not to use offset transform
 	bool m_useOffsetTransform;
