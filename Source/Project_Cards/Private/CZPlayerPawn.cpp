@@ -172,12 +172,13 @@ void ACZPlayerPawn::StopDraggingCard()
 
 	if (IsValid(m_hoveredCard))
 	{
-		int cost = m_hoveredCard->Cost;
+		int cost = m_hoveredCard->GetCost();
+		int handIndex = m_hoveredCard->GetHandIndex();
 		
 		if (m_hoveredCard->EndDragCard())
 		{
 			OnCardActivated(cost);
-			DiscardFromHand(m_hoveredCard->GetHandIndex());
+			DiscardFromHand(handIndex);
 		}
 	}
 

@@ -97,6 +97,9 @@ public:
 	void ApplyEffects();
 
 	void ShrinkToReset();
+
+	UFUNCTION(BlueprintPure, Category=Card)
+	int GetCost() const { return Cost; }
 	
 protected:
 	// Called when the game starts or when spawned
@@ -146,9 +149,6 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Card)
 	TArray<UCZEffectAsset*> CardEffects;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Card)
-	int Cost;
 	
 	// transform of the card while dragging for interp
 	FTransform m_offsetTransform;
@@ -165,6 +165,14 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category=Card)
 	bool DebugHit;
 
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Card)
+	int Cost;
+
+	UPROPERTY()
+	// index for the card in the hand
+	int m_handIndex;
+	
 private:
 	// determine whether or not to use offset transform
 	bool m_useOffsetTransform;
@@ -174,9 +182,6 @@ private:
 
 	// the starting mesh transform to return it to it's original position
 	FTransform m_defaultMeshTransform;
-
-	// index for the card in the hand
-	int m_handIndex;
 
 	// has the card been used
 	bool m_cardUsed;
