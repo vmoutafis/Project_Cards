@@ -44,7 +44,7 @@ void ACZPlayerPawn::ClearHand()
 {
 	for (const auto& cardRef : m_hand)
 	{
-		cardRef->ShrinkToReset();
+		cardRef->StartDiscard();
 		DiscardCard(cardRef);
 	}
 

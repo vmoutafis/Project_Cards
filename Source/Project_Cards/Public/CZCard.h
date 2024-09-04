@@ -10,6 +10,8 @@ class UBoxComponent;
 class UCZEffectAsset;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnHighlightChanged, AActor*, card, int, handIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnActivateComplete);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDiscardActivated);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDiscardComplete);
 
 UCLASS()
 class PROJECT_CARDS_API ACZCard : public AActor
@@ -20,6 +22,10 @@ public:
 	// Sets default values for this actor's properties
 	ACZCard();
 
+	// if the card is in the process of being discarded
+	UFUNCTION(BlueprintPure, Category=Discard)
+	bool IsDiscarding() const { return m_discarding; }
+	
 	// get the transform of the card whether dragged or in hand
 	UFUNCTION(BlueprintPure, Category=Card)
 	FTransform GetCurrentTransform() const;
@@ -47,6 +53,12 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category=Highlight)
 	FOnActivateComplete Delegate_OnActivateComplete;
+
+	UPROPERTY(BlueprintAssignable, Category=Discard)
+	FOnDiscardActivated Delegate_OnDiscardActivated;
+
+	UPROPERTY(BlueprintAssignable, Category=Discard)
+	FOnDiscardActivated Delegate_OnDiscardComplete;
 
 	// set the index of the card based on the hand
 	void SetHandIndex(int index) { m_handIndex = index; }
@@ -93,10 +105,22 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category=Activation)
 	void OnActivationComplete();
 
+	UFUNCTION(BlueprintImplementableEvent, Category=Discard)
+	void OnDiscardActivated();
+
+	UFUNCTION(BlueprintImplementableEvent, Category=Discard)
+	void OnDiscardComplete();
+
 	UFUNCTION(BlueprintCallable, Category=Effects)
 	void ApplyEffects();
 
-	void ShrinkToReset();
+	// if instant is true the function auto runs CompleteDiscard()
+	// if instant is not true you must run CompleteDiscard() to complete the discard
+	UFUNCTION(BlueprintCallable, Category=Discard)
+	void StartDiscard(const bool instant = false);
+
+	UFUNCTION(BlueprintCallable, Category=Discard)
+	void CompleteDiscard();
 
 	UFUNCTION(BlueprintPure, Category=Card)
 	int GetCost() const { return Cost; }
@@ -208,5 +232,5 @@ private:
 	float m_handInterpSpeed;
 
 	// card set to reset when shrink complete
-	bool m_shrinkToReset;
+	bool m_discarding;
 };

@@ -35,7 +35,7 @@ ACZCard::ACZCard()
 	DebugHit = false;
 	m_handInterpSpeed = 10.0f;
 	m_offsetInterpSpeed = 25.0f;
-	m_shrinkToReset = false;
+	m_discarding = false;
 }
 
 FTransform ACZCard::GetCurrentTransform() const
@@ -149,7 +149,6 @@ void ACZCard::CompleteActivation()
 {
 	OnActivationComplete();
 	Delegate_OnActivateComplete.Broadcast();
-	ResetCard();
 }
 
 void ACZCard::ApplyEffects()
@@ -158,13 +157,25 @@ void ACZCard::ApplyEffects()
 		effect->ActivateEffect(GetHitActor(), this);
 }
 
-void ACZCard::ShrinkToReset()
+void ACZCard::StartDiscard(const bool instant)
 {
+	m_discarding = true;
 	ToggleOffsetTransform(false);
 	m_cardUsed = true;
 	m_meshTransform = m_defaultMeshTransform;
-	m_handTransform.SetScale3D(FVector(0.0f));
-	m_shrinkToReset = true;
+	OnDiscardActivated();
+	Delegate_OnDiscardActivated.Broadcast();
+
+	if (instant)
+		CompleteDiscard();
+}
+
+void ACZCard::CompleteDiscard()
+{
+	m_discarding = false;
+	ResetCard();
+	OnDiscardComplete();
+	Delegate_OnDiscardComplete.Broadcast();
 }
 
 // Called when the game starts or when spawned
@@ -193,9 +204,6 @@ void ACZCard::TryStopMoving()
 	
 	m_isMoving = false;
 	OnStopMoving();
-
-	if (m_shrinkToReset)
-		ResetCard();
 }
 
 void ACZCard::ResetCard()
@@ -219,7 +227,7 @@ void ACZCard::ResetCard()
 	Mesh->SetRelativeTransform(m_meshTransform);
 	m_cardActive = false;
 	m_cardUsed = false;
-	m_shrinkToReset = false;
+	m_discarding = false;
 }
 
 void ACZCard::HandleActorInterp()
