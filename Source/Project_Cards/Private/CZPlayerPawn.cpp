@@ -356,7 +356,10 @@ void ACZPlayerPawn::DrawNextCard()
 	}
 
 	if (!IsValid(cardRef))
+	{
+		Delegate_OnHandDrawn.Broadcast();
 		return;
+	}
 	
 	GetWorldTimerManager().SetTimer(TH_DrawTimer, this, &ACZPlayerPawn::TryDrawNextCard, 0.2f, false);
 }
@@ -364,7 +367,10 @@ void ACZPlayerPawn::DrawNextCard()
 void ACZPlayerPawn::TryDrawNextCard()
 {
 	if (m_cardsToDraw <= 0)
+	{
+		Delegate_OnHandDrawn.Broadcast();
 		return;		
+	}
 
 	m_cardsToDraw--;
 	DrawNextCard();

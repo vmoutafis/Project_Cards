@@ -13,6 +13,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnActivateComplete);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDiscardActivated);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDiscardComplete);
 
+UENUM()
+enum ECardLerpType
+{
+	CLT_Full UMETA(DisplayName="Full"),
+	CLT_MeshOnly UMETA(DisplayName="Mesh Only"),
+	CLT_ActorOnly UMETA(DisplayName="Actor Only"),
+	CLT_None UMETA(DisplayName="None")
+};
+
 UCLASS()
 class PROJECT_CARDS_API ACZCard : public AActor
 {
@@ -22,6 +31,26 @@ public:
 	// Sets default values for this actor's properties
 	ACZCard();
 
+	// sets the lerp transform for the mesh
+	UFUNCTION(BlueprintCallable, Category=Mesh)
+	void SetMeshLerpTransform(const FTransform transform);
+
+	// resets the lerp transform for the mesh
+	UFUNCTION(BlueprintCallable, Category=Mesh)
+	void ResetMeshLerpTransform();
+	
+	// change the lerp type of the card
+	UFUNCTION(BlueprintCallable, Category=Lerp)
+	void ChangeLerpType(TEnumAsByte<ECardLerpType> Type);
+
+	// ignore the mesh lerp
+	UFUNCTION(BlueprintCallable, Category=Lerp)
+	void IgnoreMeshLerp(const bool ignore);
+
+	// ignore the actor lerp
+	UFUNCTION(BlueprintCallable, Category=Lerp)
+	void IgnoreActorLerp(const bool ignore);
+	
 	// if the card is in the process of being discarded
 	UFUNCTION(BlueprintPure, Category=Discard)
 	bool IsDiscarding() const { return m_discarding; }
@@ -144,6 +173,10 @@ protected:
 	// card was successfully activated
 	UFUNCTION(BlueprintImplementableEvent, Category=Card)
 	void OnCardActivated();
+
+	// card was reset to default state
+    UFUNCTION(BlueprintImplementableEvent, Category=Card)
+    void OnCardReset();
 	
 private:
 	// interp the actor to the correct location
@@ -233,4 +266,10 @@ private:
 
 	// card set to reset when shrink complete
 	bool m_discarding;
+
+	// stop the mesh from lerping
+	bool m_ignoreMeshLerp;
+
+	// stop the actor from lerping
+	bool m_ignoreActorLerp;
 };

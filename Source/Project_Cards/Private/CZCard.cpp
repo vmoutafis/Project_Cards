@@ -4,6 +4,7 @@
 #include "CZCard.h"
 
 #include "CZEffectAsset.h"
+#include "CZPlayerPawn.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -36,6 +37,55 @@ ACZCard::ACZCard()
 	m_handInterpSpeed = 10.0f;
 	m_offsetInterpSpeed = 25.0f;
 	m_discarding = false;
+	m_ignoreMeshLerp = false;
+	m_ignoreActorLerp = false;
+}
+
+void ACZCard::SetMeshLerpTransform(const FTransform transform)
+{
+	m_meshTransform = transform;
+}
+
+void ACZCard::ResetMeshLerpTransform()
+{
+	m_meshTransform = m_defaultMeshTransform;
+}
+
+void ACZCard::ChangeLerpType(TEnumAsByte<ECardLerpType> Type)
+{
+	switch (Type)
+	{
+	case CLT_Full:
+		m_ignoreActorLerp = false;
+		m_ignoreMeshLerp = false;
+		break;
+	case CLT_ActorOnly:
+		m_ignoreActorLerp = false;
+		m_ignoreMeshLerp = true;
+		break;
+	case CLT_MeshOnly:
+		m_ignoreActorLerp = true;
+		m_ignoreMeshLerp = false;
+		break;
+	case CLT_None:
+		m_ignoreActorLerp = true;
+		m_ignoreMeshLerp = true;
+		break;
+	default:
+		m_ignoreActorLerp = false;
+		m_ignoreMeshLerp = false;
+		break;
+	}
+}
+
+void ACZCard::IgnoreMeshLerp(const bool ignore)
+{
+	m_ignoreMeshLerp = ignore;
+}
+
+void ACZCard::IgnoreActorLerp(const bool ignore)
+{
+	m_ignoreActorLerp = ignore;
 }
 
 FTransform ACZCard::GetCurrentTransform() const
@@ -172,6 +222,9 @@ void ACZCard::StartDiscard(const bool instant)
 
 void ACZCard::CompleteDiscard()
 {
+	if (auto player = Cast<ACZPlayerPawn>(GetOwner()))
+		player->DiscardFromHand(GetHandIndex());
+	
 	m_discarding = false;
 	ResetCard();
 	OnDiscardComplete();
@@ -228,10 +281,17 @@ void ACZCard::ResetCard()
 	m_cardActive = false;
 	m_cardUsed = false;
 	m_discarding = false;
+
+	ChangeLerpType(CLT_Full);
+
+	OnCardReset();
 }
 
 void ACZCard::HandleActorInterp()
 {
+	if (m_ignoreActorLerp)
+		return;
+	
 	if (GetActorTransform().Equals(GetCurrentTransform(), 0.01f))
 		return TryStopMoving();
 
@@ -249,7 +309,7 @@ void ACZCard::HandleActorInterp()
 
 void ACZCard::HandleMeshInterp() const
 {
-	if (!IsValid(Mesh))
+	if (!IsValid(Mesh) || m_ignoreMeshLerp)
 		return;
 
 	if (Mesh->GetRelativeTransform().Equals(m_meshTransform, 0.01f))

@@ -12,6 +12,7 @@ class USplineComponent;
 class UCameraComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeckChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHandDrawn);
 
 UCLASS()
 class PROJECT_CARDS_API ACZPlayerPawn : public APawn
@@ -24,6 +25,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category=Deck)
 	FOnDeckChanged Delegate_OnDeckChanged;
+
+	UPROPERTY(BlueprintAssignable, Category=Hand)
+	FOnHandDrawn Delegate_OnHandDrawn;
 
 	// check if the deck is empty
 	UFUNCTION(BlueprintPure, Category=Deck)
@@ -70,6 +74,22 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category=Hand)
 	void OnCardActivated(int Cost);
+
+	// get the cards in hand
+	UFUNCTION(BlueprintPure, Category=Cards)
+	TArray<ACZCard*> GetHand() const { return m_hand; }
+
+	// get the cards in deck
+	UFUNCTION(BlueprintPure, Category=Cards)
+	TArray<ACZCard*> GetDeck() const { return m_deck; }
+
+	// get the cards in the discard deck
+	UFUNCTION(BlueprintPure, Category=Cards)
+	TArray<ACZCard*> GetDiscardDeck() const { return m_discardDeck; }
+
+	// discard a card from the hand
+	UFUNCTION(BlueprintCallable, Category=Card)
+	void DiscardFromHand(int handIndex);
 	
 protected:
 	// shuffle the cards in the deck
@@ -102,10 +122,7 @@ protected:
 
 	// add a card to the discard pile
 	void DiscardCard(ACZCard* card);
-
-	// discard a card from the hand
-	void DiscardFromHand(int handIndex);
-
+	
 	// remove a card from the hand
 	ACZCard* RemoveCardFromHand(int index);
 
