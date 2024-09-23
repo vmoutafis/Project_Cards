@@ -26,4 +26,5 @@ protected:
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
 	int Damage;
+	
 };
