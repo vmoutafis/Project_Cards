@@ -32,3 +32,25 @@ FString UCZEffectAsset::GetDescription() const
 {
 	return FString("This is an effect called: ") + EffectName;
 }
+
+UCZStatsComponent* UCZEffectAsset::GetSourceStats() const
+{
+	if (!IsValid(GetSource()))
+		return {};
+
+	if (const auto stats = GetSource()->GetComponentByClass<UCZStatsComponent>())
+		return stats;
+	
+	return {};
+}
+
+UCZStatsComponent* UCZEffectAsset::GetTargetStats() const
+{
+	if (!IsValid(GetTarget()))
+		return {};
+
+	if (const auto stats = GetTarget()->GetComponentByClass<UCZStatsComponent>())
+		return stats;
+	
+	return {};
+}

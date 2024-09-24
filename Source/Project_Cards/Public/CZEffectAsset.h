@@ -4,20 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
+#include "CZStatsComponent.h"
 #include "CZEffectAsset.generated.h"
-
-UENUM()
-enum EPrimaryAttributes
-{
-	PA_Strength UMETA(DisplayName = "Strength"),
-	PA_Intellect UMETA(DisplayName = "Intellect"),
-	PA_Vitality UMETA(DisplayName = "Vitality"),
-	PA_Stamina UMETA(DisplayName = "Stamina"),
-	PA_Dexterity UMETA(DisplayName = "Dexterity")
-};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActivated, UCZEffectAsset*, effect);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnded, UCZEffectAsset*, effect);
+
+class UCZStatsComponent;
 
 /**
  * 
@@ -51,6 +44,10 @@ protected:
 	AActor* GetTarget() const { return m_target; }
 
 	AActor* GetSource() const { return m_source; }
+
+	UCZStatsComponent* GetSourceStats() const;
+	
+	UCZStatsComponent* GetTargetStats() const;
 	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)

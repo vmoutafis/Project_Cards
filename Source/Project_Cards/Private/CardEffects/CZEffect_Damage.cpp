@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "CZEffect_Damage.h"
+#include "CardEffects/CZEffect_Damage.h"
 
 #include "CZCard.h"
 #include "Kismet/GameplayStatics.h"
@@ -13,12 +13,12 @@ UCZEffect_Damage::UCZEffect_Damage()
 
 FString UCZEffect_Damage::GetDescription() const
 {
-	return FString("Deal ") + FString::FromInt(GetScaledDamage()) + FString(" Damage");
+	return FString("Deal ") + FString::FromInt(GetScaledDamage()) + FString(" Damage.");
 }
 
 int UCZEffect_Damage::GetScaledDamage() const
 {
-	return Damage;
+	return Damage * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
 }
 
 void UCZEffect_Damage::OnEffectActivated()
