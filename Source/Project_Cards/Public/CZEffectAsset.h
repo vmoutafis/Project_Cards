@@ -10,8 +10,6 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActivated, UCZEffectAsset*, effect);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnded, UCZEffectAsset*, effect);
 
-class UCZStatsComponent;
-
 /**
  * 
  */
@@ -44,6 +42,8 @@ protected:
 	AActor* GetTarget() const { return m_target; }
 
 	AActor* GetSource() const { return m_source; }
+
+	AActor* GetSourceOwner() const;
 
 	UCZStatsComponent* GetSourceStats() const;
 	

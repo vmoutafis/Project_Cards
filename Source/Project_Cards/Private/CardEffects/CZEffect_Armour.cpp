@@ -20,5 +20,5 @@ void UCZEffect_Armour::OnEffectActivated()
 	if (!IsValid(GetSource()))
 		return;
 
-	
+	GetSourceStats()->SetSecondaryAttribute(SA_Armour, Armour, true);
 }

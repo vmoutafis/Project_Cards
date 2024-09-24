@@ -33,12 +33,29 @@ FString UCZEffectAsset::GetDescription() const
 	return FString("This is an effect called: ") + EffectName;
 }
 
+AActor* UCZEffectAsset::GetSourceOwner() const
+{
+	if (!IsValid(GetSource()))
+		return {};
+	
+	return GetSource()->GetOwner();
+}
+
 UCZStatsComponent* UCZEffectAsset::GetSourceStats() const
 {
 	if (!IsValid(GetSource()))
 		return {};
 
-	if (const auto stats = GetSource()->GetComponentByClass<UCZStatsComponent>())
+	if (!IsValid(GetSourceOwner()))
+		return {};
+	
+	TArray<UActorComponent*> components;
+	GetSource()->GetOwner()->GetComponents(UCZStatsComponent::StaticClass(), components);
+
+	if (components.IsEmpty())
+		return {};
+	
+	if (const auto stats = Cast<UCZStatsComponent>(components[0]))
 		return stats;
 	
 	return {};
@@ -49,7 +66,13 @@ UCZStatsComponent* UCZEffectAsset::GetTargetStats() const
 	if (!IsValid(GetTarget()))
 		return {};
 
-	if (const auto stats = GetTarget()->GetComponentByClass<UCZStatsComponent>())
+	TArray<UActorComponent*> components;
+	GetTarget()->GetComponents(UCZStatsComponent::StaticClass(), components);
+
+	if (components.IsEmpty())
+		return {};
+	
+	if (const auto stats = Cast<UCZStatsComponent>(components[0]))
 		return stats;
 	
 	return {};
