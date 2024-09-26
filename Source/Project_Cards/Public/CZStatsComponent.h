@@ -7,7 +7,7 @@
 #include "CZStatsComponent.generated.h"
 
 #define NUM_PRIM_ATTRIBS 5
-#define NUM_SECOND_ATTRIBS 4
+#define NUM_SECOND_ATTRIBS 5
 
 UENUM(BlueprintType)
 enum EPrimaryAttributes : int
@@ -26,6 +26,7 @@ enum ESecondaryAttributes : int
 	SA_MaxHealth UMETA(DisplayName = "Max Health"),
 	SA_Armour UMETA(DisplayName = "Armour"),
 	SA_Energy UMETA(DisplayName = "Energy"),
+	SA_MaxEnergy UMETA(DisplayName = "Max Energy")
 };
 
 USTRUCT(BlueprintType)
