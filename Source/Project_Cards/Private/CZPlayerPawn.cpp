@@ -172,8 +172,8 @@ void ACZPlayerPawn::StopDraggingCard()
 
 	if (IsValid(m_hoveredCard))
 	{
-		int cost = m_hoveredCard->GetCost();
-		int handIndex = m_hoveredCard->GetHandIndex();
+		const int cost = m_hoveredCard->GetCost();
+		const int handIndex = m_hoveredCard->GetHandIndex();
 		
 		if (m_hoveredCard->EndDragCard())
 		{
@@ -327,10 +327,9 @@ void ACZPlayerPawn::SpaceCardsInHand()
 		// update rotation
 		FRotator newRotation = FRotator::ZeroRotator;
 		newRotation.Roll = HandSpline->GetRotationAtDistanceAlongSpline(distanceOnSpline, ESplineCoordinateSpace::World).Pitch * -2.0f;
+
 		if (GetHandSize() > 1)
-		{
 			newRotation.Yaw = 20.0f;
-		}
 		
 		newTransform.SetRotation(newRotation.Quaternion());
 
