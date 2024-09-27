@@ -6,11 +6,20 @@
 UCZEffect_Armour::UCZEffect_Armour()
 {
 	Armour = 1;
+	EffectAttribute = PA_None;
+}
+
+int UCZEffect_Armour::GetScaledArmour() const
+{
+	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
+		return Armour;
+	
+	return Armour * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
 }
 
 FString UCZEffect_Armour::GetDescription() const
 {
-	return FString("Gain ") + FString::FromInt(Armour) + FString(" Armour.");
+	return FString("Gain ") + FString::FromInt(GetScaledArmour()) + FString(" Armour.");
 }
 
 void UCZEffect_Armour::OnEffectActivated()
@@ -20,5 +29,5 @@ void UCZEffect_Armour::OnEffectActivated()
 	if (!IsValid(GetSource()))
 		return;
 
-	GetSourceStats()->SetSecondaryAttribute(SA_Armour, Armour, true);
+	GetSourceStats()->SetSecondaryAttribute(SA_Armour, GetScaledArmour(), true);
 }

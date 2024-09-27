@@ -41,19 +41,29 @@ void UCZStatsComponent::SetPrimaryAttribute(TEnumAsByte<EPrimaryAttributes> attr
 	Delegate_OnPrimaryAttributeUpdated.Broadcast(attribute, PrimaryAttributes[attribute.GetIntValue()]);
 }
 
-void UCZStatsComponent::SetSecondaryAttribute(const TEnumAsByte<ESecondaryAttributes> attribute, const int value,
-	const bool increment)
+int UCZStatsComponent::SetSecondaryAttribute(const TEnumAsByte<ESecondaryAttributes> attribute, const int value,
+	const bool increment, const int clampMax)
 {
 	if (attribute >= NUM_SECOND_ATTRIBS)
-		return;
+		return -1;
 
+	const uint8 index = attribute.GetIntValue();
+	
 	if (!increment)
-		SecondaryAttributes[attribute.GetIntValue()] = value;
+		SecondaryAttributes[index] = value;
 	else
-		SecondaryAttributes[attribute.GetIntValue()] += value;
+		SecondaryAttributes[index] += value;
 
-	OnSecondaryAttributeUpdated(attribute, SecondaryAttributes[attribute.GetIntValue()]);
-	Delegate_OnSecondaryAttributeUpdated.Broadcast(attribute, SecondaryAttributes[attribute.GetIntValue()]);
+	if (SecondaryAttributes[index] < 0)
+		SecondaryAttributes[index] = 0;
+
+	if (clampMax > -1 && SecondaryAttributes[index] > clampMax)
+		SecondaryAttributes[index] = clampMax;
+	
+	OnSecondaryAttributeUpdated(attribute, SecondaryAttributes[index]);
+	Delegate_OnSecondaryAttributeUpdated.Broadcast(attribute, SecondaryAttributes[index]);
+
+	return SecondaryAttributes[index];
 }
 
 int UCZStatsComponent::GetSecondaryAttribute(const TEnumAsByte<ESecondaryAttributes> attribute) const

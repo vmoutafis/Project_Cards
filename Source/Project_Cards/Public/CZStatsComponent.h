@@ -16,7 +16,8 @@ enum EPrimaryAttributes : int
 	PA_Intellect UMETA(DisplayName = "Intellect"),
 	PA_Vitality UMETA(DisplayName = "Vitality"),
 	PA_Stamina UMETA(DisplayName = "Stamina"),
-	PA_Dexterity UMETA(DisplayName = "Dexterity")
+	PA_Dexterity UMETA(DisplayName = "Dexterity"),
+	PA_None UMETA(DisplayName = "None")
 };
 
 UENUM(BlueprintType)
@@ -89,7 +90,8 @@ public:
 	// set a secondary attribute
 	// enable increment to add or remove from the current value
 	UFUNCTION(BlueprintCallable, Category=Attributes)
-	void SetSecondaryAttribute(const TEnumAsByte<ESecondaryAttributes> attribute, const int value, const bool increment = false);
+	int SetSecondaryAttribute(const TEnumAsByte<ESecondaryAttributes> attribute, const int value,
+		const bool increment = false, const int clampMax = -1);
 
 	// get the value of the secondary attribute
 	UFUNCTION(BlueprintPure, Category=Attributes)

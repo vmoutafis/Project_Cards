@@ -16,6 +16,8 @@ class PROJECT_CARDS_API UCZEffect_Armour : public UCZEffectAsset
 
 public:
 	UCZEffect_Armour();
+
+	int GetScaledArmour() const;
 	
 	virtual FString GetDescription() const override;
 

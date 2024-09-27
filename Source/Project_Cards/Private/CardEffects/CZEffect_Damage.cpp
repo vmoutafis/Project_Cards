@@ -18,7 +18,7 @@ FString UCZEffect_Damage::GetDescription() const
 
 int UCZEffect_Damage::GetScaledDamage() const
 {
-	if (!IsValid(GetSourceStats()))
+	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
 		return Damage;
 	
 	return Damage * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
