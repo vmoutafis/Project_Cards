@@ -270,7 +270,13 @@ void ACZPlayerPawn::DiscardCard(ACZCard* card)
 void ACZPlayerPawn::DiscardFromHand(int handIndex)
 {
 	if (const auto& cardRef = RemoveCardFromHand(handIndex))
+	{
 		DiscardCard(cardRef);
+		UE_LOG(LogTemp, Warning, TEXT("Card discarded"))
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("No card to discard"))
 }
 
 ACZCard* ACZPlayerPawn::RemoveCardFromHand(int index)
@@ -295,7 +301,10 @@ void ACZPlayerPawn::HandChanged()
 void ACZPlayerPawn::SpaceCardsInHand()
 {
 	if (IsHandEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Hand is empty cannot space cards"))
 		return;
+	}
 
 	const float halfSplineLength = HandSpline->GetSplineLength() / 2.0f;
 	const float halfHandSize = FMath::Max(static_cast<float>(GetHandSize() - 1), 1.0f) / 2.0f;
@@ -334,6 +343,8 @@ void ACZPlayerPawn::SpaceCardsInHand()
 		newTransform.SetRotation(newRotation.Quaternion());
 
 		m_hand[i]->SetHand(i, newTransform);
+
+		UE_LOG(LogTemp, Warning, TEXT("%s is now: %i"), *m_hand[i]->GetName(), static_cast<int>(i))
 	}
 }
 

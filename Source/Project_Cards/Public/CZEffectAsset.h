@@ -55,6 +55,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
 	TEnumAsByte<EPrimaryAttributes> EffectAttribute;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
+	int EffectDuration;
 	
 private:
 	UPROPERTY()

@@ -19,6 +19,9 @@ void UCZEffectAsset::ActivateEffect(AActor* target, AActor* source)
 	OnEffectActivated();
 
 	Delegate_OnActivated.Broadcast(this);
+
+	if (EffectDuration <= 0)
+		EndEffect();
 }
 
 void UCZEffectAsset::EndEffect()
