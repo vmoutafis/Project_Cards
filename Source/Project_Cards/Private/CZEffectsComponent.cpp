@@ -3,32 +3,79 @@
 
 #include "CZEffectsComponent.h"
 
+#include "CZEffectAsset.h"
+
 // Sets default values for this component's properties
 UCZEffectsComponent::UCZEffectsComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 	// ...
 }
 
-
-// Called when the game starts
-void UCZEffectsComponent::BeginPlay()
+void UCZEffectsComponent::AddTurnEffect(const FTurnEffect Effect)
 {
-	Super::BeginPlay();
+	TurnEffects.Add(Effect);
 
-	// ...
+	Effect.Effect->Delegate_OnActivated.AddDynamic(this, &UCZEffectsComponent::OnEffectActivated);
 	
+	Delegate_OnEffectsChanged.Broadcast();
 }
 
-
-// Called every frame
-void UCZEffectsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UCZEffectsComponent::RemoveTurnEffect(const int index, const bool runEndEffect)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	if (!TurnEffects.IsValidIndex(index))
+		return;
 
-	// ...
+	if (runEndEffect)
+		TurnEffects[index].Effect->EndEffect();
+
+	TurnEffects.RemoveAt(index);
+
+	Delegate_OnEffectsChanged.Broadcast();
+}
+
+void UCZEffectsComponent::TurnStart()
+{
+	for (size_t i = 0; i < TurnEffects.Num(); ++i)
+		TurnEffects[i].Effect->TurnStart();
+
+	for (size_t i = 0; i < TurnEffects.Num(); ++i)
+	{
+		TurnEffects[i].TurnsRemaining -= 1;
+
+		if (TurnEffects[i].TurnsRemaining <= 0)
+			TurnEffects[i].Effect->EndEffect();
+	}
+
+	for (int i = TurnEffects.Num() - 1; i >= 0; --i)
+	{
+		if (TurnEffects[i].TurnsRemaining <= 0)
+			RemoveTurnEffect(i, false);
+	}
+
+	Delegate_OnEffectsChanged.Broadcast();
+}
+
+void UCZEffectsComponent::TurnEnd()
+{
+	for (const auto effect : TurnEffects)
+		effect.Effect->TurnEnd();
+
+	Delegate_OnEffectsChanged.Broadcast();
+}
+
+void UCZEffectsComponent::OnEffectActivated(UCZEffectAsset* effect)
+{
+	for (const auto turnEffect : TurnEffects)
+	{
+		if (effect == turnEffect.Effect)
+		{
+			Delegate_OnEffectActivated.Broadcast(turnEffect);
+			return;
+		}
+	}
 }
 

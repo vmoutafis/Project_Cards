@@ -3,25 +3,111 @@
 
 #include "CZEffectAsset.h"
 
+#include "CZEffectsComponent.h"
+
 UCZEffectAsset::UCZEffectAsset()
 {
 	m_target = nullptr;
 	m_source = nullptr;
 	EffectName = "Effect Name";
 	EffectAttribute = PA_Strength;
+	bApplyEffectOnActivate = true;
+	TurnActivationType = TA_Start;
+	bEmpowerValue = true;
+	bStackDuration = false;
+	bResetDuration = false;
 }
 
 void UCZEffectAsset::ActivateEffect(AActor* target, AActor* source)
 {
 	m_target = target;
 	m_source = source;
+
+	if (!IsValid(m_target) || !IsValid(m_source))
+		return;
+	
+	if (bApplyEffectOnActivate)
+	{
+		OnEffectActivated();
+
+		Delegate_OnActivated.Broadcast(this);
+	}
+
+	if (EffectDuration <= 0)
+		EndEffect();
+	else
+	{
+		UActorComponent* comp = nullptr;
+		
+		switch (TurnEffectTarget)
+		{
+		case TT_Source :
+			comp = source->GetComponentByClass(UCZEffectsComponent::StaticClass());
+			break;
+		case TT_Target :
+			comp = target->GetComponentByClass(UCZEffectsComponent::StaticClass());
+			break;
+			default:
+				break;
+		}
+		
+		if (const auto effectComp = Cast<UCZEffectsComponent>(comp))
+		{
+			bool effectStacked = false;
+			
+			for (int i = effectComp->GetTurnEffectsAsRef().Num(); i >= 0; --i)
+			{
+				// skip if it's the wrong class
+				if (effectComp->GetTurnEffects()[i].Effect->GetClass() != this->GetClass())
+					continue;
+				
+				if (!bEmpowerValue && !bResetDuration && !bStackDuration)
+				{
+					effectComp->RemoveTurnEffect(i, false);
+					continue;
+				}
+
+				effectStacked = true;
+				
+				if (bEmpowerValue)
+					EmpowerEffect(effectComp->GetTurnEffectsAsRef()[i]);
+
+				if (bResetDuration)
+					effectComp->GetTurnEffectsAsRef()[i].TurnsRemaining = EffectDuration;
+				else if (bStackDuration)
+					effectComp->GetTurnEffectsAsRef()[i].TurnsRemaining += EffectDuration;
+			}
+
+			if (!effectStacked)
+				effectComp->AddTurnEffect({EffectDuration, this});
+		}
+	}
+}
+
+void UCZEffectAsset::TurnStart()
+{
+	if (TurnActivationType == TA_Start || TurnActivationType == TA_Both)
+		ReactivateEffect();
+
+	OnTurnStart();
+}
+
+void UCZEffectAsset::TurnEnd()
+{
+	if (TurnActivationType == TA_End || TurnActivationType == TA_Both)
+		ReactivateEffect();
+
+	OnTurnEnd();
+}
+
+void UCZEffectAsset::ReactivateEffect()
+{
+	if (!IsValid(m_target) || !IsValid(m_source))
+		return;
 	
 	OnEffectActivated();
 
 	Delegate_OnActivated.Broadcast(this);
-
-	if (EffectDuration <= 0)
-		EndEffect();
 }
 
 void UCZEffectAsset::EndEffect()
@@ -34,6 +120,13 @@ void UCZEffectAsset::EndEffect()
 FString UCZEffectAsset::GetDescription() const
 {
 	return FString("This is an effect called: ") + EffectName;
+}
+
+void UCZEffectAsset::EmpowerEffect(const FTurnEffect& TurnEffect)
+{
+	OnEmpower(TurnEffect);
+
+	Delegate_OnUpdated.Broadcast(this);
 }
 
 AActor* UCZEffectAsset::GetSourceOwner() const

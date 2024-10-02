@@ -35,10 +35,10 @@ struct FPrimaryAttribute
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TEnumAsByte<EPrimaryAttributes> Attribute = PA_Strength;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int Value = 1;
 };
 
@@ -47,10 +47,10 @@ struct FSecondaryAttribute
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TEnumAsByte<ESecondaryAttributes> Attribute = SA_Health;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int Value = 0;
 };
 
