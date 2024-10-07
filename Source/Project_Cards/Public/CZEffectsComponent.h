@@ -67,6 +67,7 @@ public:
 	FOnEffectActivated Delegate_OnEffectActivated;
 
 private:
+	UFUNCTION()
 	void OnEffectActivated(UCZEffectAsset* effect);
 	
 private:

@@ -4,6 +4,7 @@
 #include "CZCard.h"
 
 #include "CZEffectAsset.h"
+#include "CZPlayerPawn.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 
@@ -221,6 +222,12 @@ void ACZCard::StartDiscard(const bool instant)
 
 void ACZCard::CompleteDiscard()
 {
+	if (const auto player = Cast<ACZPlayerPawn>(GetOwner()))
+	{
+		if (!player->GetDiscardDeck().Contains(this))
+			player->DiscardFromHand(m_handIndex);
+	}
+	
 	m_discarding = false;
 	ResetCard();
 	OnDiscardComplete();

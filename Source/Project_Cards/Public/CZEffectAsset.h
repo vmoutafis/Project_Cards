@@ -102,23 +102,26 @@ public:
 	int EffectDuration;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Turn)
+	int EffectPower;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Turn)
 	TEnumAsByte<ETurnActivations> TurnActivationType;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Turn)
 	TEnumAsByte<ETargetTypes> TurnEffectTarget;
 
-	// increase the power of the effect
+	// increase the power of the effect when reapplied
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Turn|Stack Type")
-	bool bEmpowerValue;
+	bool bEmpowerValueOnApply;
 
 	// increase the duration of the effect
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Turn|Stack Type")
-	bool bStackDuration;
+	bool bStackDurationOnApply;
 
 	// reset the duration of the effect
 	// this will override stack duration
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Turn|Stack Type")
-	bool bResetDuration;
+	bool bResetDurationOnApply;
 	
 private:
 	UPROPERTY()

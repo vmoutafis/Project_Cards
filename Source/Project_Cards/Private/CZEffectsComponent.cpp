@@ -19,7 +19,7 @@ void UCZEffectsComponent::AddTurnEffect(const FTurnEffect Effect)
 {
 	TurnEffects.Add(Effect);
 
-	Effect.Effect->Delegate_OnActivated.AddDynamic(this, &UCZEffectsComponent::OnEffectActivated);
+	Effect.Effect->Delegate_OnActivated.AddUniqueDynamic(this, &UCZEffectsComponent::OnEffectActivated);
 	
 	Delegate_OnEffectsChanged.Broadcast();
 }
@@ -32,6 +32,7 @@ void UCZEffectsComponent::RemoveTurnEffect(const int index, const bool runEndEff
 	if (runEndEffect)
 		TurnEffects[index].Effect->EndEffect();
 
+	TurnEffects[index].Effect->Delegate_OnActivated.RemoveAll(this);
 	TurnEffects.RemoveAt(index);
 
 	Delegate_OnEffectsChanged.Broadcast();

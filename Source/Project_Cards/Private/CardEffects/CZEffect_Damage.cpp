@@ -9,6 +9,7 @@
 UCZEffect_Damage::UCZEffect_Damage()
 {
 	Damage = 1;
+	bEmpowerValueOnApply = true;
 }
 
 FString UCZEffect_Damage::GetDescription() const
@@ -19,9 +20,9 @@ FString UCZEffect_Damage::GetDescription() const
 int UCZEffect_Damage::GetScaledDamage() const
 {
 	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
-		return Damage;
+		return Damage + EffectPower;
 	
-	return Damage * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
+	return (Damage + EffectPower) * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
 }
 
 void UCZEffect_Damage::OnEffectActivated()

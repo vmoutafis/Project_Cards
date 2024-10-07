@@ -7,14 +7,15 @@ UCZEffect_Armour::UCZEffect_Armour()
 {
 	Armour = 1;
 	EffectAttribute = PA_None;
+	bEmpowerValueOnApply = true;
 }
 
 int UCZEffect_Armour::GetScaledArmour() const
 {
 	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
-		return Armour;
+		return Armour + EffectPower;
 	
-	return Armour * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
+	return (Armour + EffectPower) * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
 }
 
 FString UCZEffect_Armour::GetDescription() const

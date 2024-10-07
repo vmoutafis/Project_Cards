@@ -13,9 +13,10 @@ UCZEffectAsset::UCZEffectAsset()
 	EffectAttribute = PA_Strength;
 	bApplyEffectOnActivate = true;
 	TurnActivationType = TA_Start;
-	bEmpowerValue = true;
-	bStackDuration = false;
-	bResetDuration = false;
+	bEmpowerValueOnApply = true;
+	bStackDurationOnApply = false;
+	bResetDurationOnApply = false;
+	EffectPower = 1;
 }
 
 void UCZEffectAsset::ActivateEffect(AActor* target, AActor* source)
@@ -55,13 +56,13 @@ void UCZEffectAsset::ActivateEffect(AActor* target, AActor* source)
 		{
 			bool effectStacked = false;
 			
-			for (int i = effectComp->GetTurnEffectsAsRef().Num(); i >= 0; --i)
+			for (int i = effectComp->GetTurnEffectsAsRef().Num() - 1; i >= 0; --i)
 			{
 				// skip if it's the wrong class
 				if (effectComp->GetTurnEffects()[i].Effect->GetClass() != this->GetClass())
 					continue;
 				
-				if (!bEmpowerValue && !bResetDuration && !bStackDuration)
+				if (!bEmpowerValueOnApply && !bResetDurationOnApply && !bStackDurationOnApply)
 				{
 					effectComp->RemoveTurnEffect(i, false);
 					continue;
@@ -69,17 +70,23 @@ void UCZEffectAsset::ActivateEffect(AActor* target, AActor* source)
 
 				effectStacked = true;
 				
-				if (bEmpowerValue)
+				if (bEmpowerValueOnApply)
 					EmpowerEffect(effectComp->GetTurnEffectsAsRef()[i]);
 
-				if (bResetDuration)
+				if (bResetDurationOnApply)
 					effectComp->GetTurnEffectsAsRef()[i].TurnsRemaining = EffectDuration;
-				else if (bStackDuration)
+
+				if (bStackDurationOnApply)
 					effectComp->GetTurnEffectsAsRef()[i].TurnsRemaining += EffectDuration;
+
+				Delegate_OnUpdated.Broadcast(this);
 			}
 
 			if (!effectStacked)
+			{
+				EffectPower = 1;
 				effectComp->AddTurnEffect({EffectDuration, this});
+			}
 		}
 	}
 }
@@ -124,6 +131,8 @@ FString UCZEffectAsset::GetDescription() const
 
 void UCZEffectAsset::EmpowerEffect(const FTurnEffect& TurnEffect)
 {
+	EffectPower++;
+	
 	OnEmpower(TurnEffect);
 
 	Delegate_OnUpdated.Broadcast(this);
