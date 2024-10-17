@@ -48,7 +48,7 @@ public:
 	// remove a turn effect
 	// use the index that can be obtained from GetTurnEffects()
 	UFUNCTION(BlueprintCallable, Category=Effects)
-	void RemoveTurnEffect(const int index, const bool runEndEffect = true);
+	void RemoveTurnEffect(const int index);
 	
 	// run when the turn starts
 	// all effects that have a turn start will activate their effects

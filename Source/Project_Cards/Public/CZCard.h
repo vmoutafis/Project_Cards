@@ -205,7 +205,7 @@ public:
 	FString CardName;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Card)
-	TArray<UCZEffectAsset*> CardEffects;
+	TArray<TSubclassOf<UCZEffectAsset>> CardEffects;
 	
 	// transform of the card while dragging for interp
 	FTransform m_offsetTransform;
@@ -229,6 +229,9 @@ protected:
 	UPROPERTY()
 	// index for the card in the hand
 	int m_handIndex;
+
+	UPROPERTY()
+	TArray<UCZEffectAsset*> CardEffectsObjects;
 	
 private:
 	// determine whether or not to use offset transform

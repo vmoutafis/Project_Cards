@@ -2,35 +2,15 @@
 
 
 #include "CardEffects/CZEffect_Damage.h"
-
 #include "CZCard.h"
 #include "Kismet/GameplayStatics.h"
 
-UCZEffect_Damage::UCZEffect_Damage()
-{
-	Damage = 1;
-	bEmpowerValueOnApply = true;
-	bAddPowerToDamage = true;
-}
-
-FString UCZEffect_Damage::GetDescription() const
-{
-	FString FinalDes = Super::GetDescription();
-	
-	return FinalDes = FinalDes.Replace(TEXT("<DAMAGE>"), *FString::FromInt(GetScaledDamage()));
-}
-
 int UCZEffect_Damage::GetScaledDamage() const
 {
-	int FinalDamage = Damage;
-	
-	if (bAddPowerToDamage)
-		FinalDamage += CurrentEffectPower;
-	
 	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
-		return FinalDamage;
+		return EffectPower;
 	
-	return FinalDamage * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
+	return EffectPower * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
 }
 
 void UCZEffect_Damage::OnEffectActivated()
@@ -41,7 +21,7 @@ void UCZEffect_Damage::OnEffectActivated()
 		return;
 
 	FHitResult hit;
-	hit.Location = GetSource()->GetActorLocation();
+	hit.Location = GetTarget()->GetActorLocation();
 	hit.ImpactPoint = hit.Location;
 	hit.Normal = -GetSource()->GetActorForwardVector();
 	hit.ImpactNormal = hit.Normal;

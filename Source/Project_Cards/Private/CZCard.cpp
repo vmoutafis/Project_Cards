@@ -203,7 +203,7 @@ void ACZCard::CompleteActivation()
 
 void ACZCard::ApplyEffects()
 {
-	for (const auto& effect : CardEffects)
+	for (const auto& effect : CardEffectsObjects)
 		effect->ActivateEffect(GetHitActor(), this);
 }
 
@@ -239,7 +239,14 @@ void ACZCard::BeginPlay()
 {
 	Super::BeginPlay();
 
-	m_defaultMeshTransform = Mesh->GetRelativeTransform(); 
+	for (const auto effect : CardEffects)
+	{
+		auto effectRef = NewObject<UCZEffectAsset>(GetWorld(), effect);
+
+		CardEffectsObjects.Add(effectRef);
+	}
+	
+	m_defaultMeshTransform = Mesh->GetRelativeTransform();
 	
 	ResetCard();
 }

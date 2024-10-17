@@ -24,13 +24,12 @@ void UCZEffectsComponent::AddTurnEffect(const FTurnEffect Effect)
 	Delegate_OnEffectsChanged.Broadcast();
 }
 
-void UCZEffectsComponent::RemoveTurnEffect(const int index, const bool runEndEffect)
+void UCZEffectsComponent::RemoveTurnEffect(const int index)
 {
 	if (!TurnEffects.IsValidIndex(index))
 		return;
 
-	if (runEndEffect)
-		TurnEffects[index].Effect->EndEffect();
+	TurnEffects[index].Effect->EndEffect();
 
 	TurnEffects[index].Effect->Delegate_OnActivated.RemoveAll(this);
 	TurnEffects.RemoveAt(index);
@@ -41,20 +40,15 @@ void UCZEffectsComponent::RemoveTurnEffect(const int index, const bool runEndEff
 void UCZEffectsComponent::TurnStart()
 {
 	for (size_t i = 0; i < TurnEffects.Num(); ++i)
-		TurnEffects[i].Effect->TurnStart();
-
-	for (size_t i = 0; i < TurnEffects.Num(); ++i)
 	{
-		TurnEffects[i].TurnsRemaining -= 1;
-
-		if (TurnEffects[i].TurnsRemaining <= 0)
-			TurnEffects[i].Effect->EndEffect();
+		TurnEffects[i].Effect->TurnStart();
+		TurnEffects[i].Effect->ReduceEffectPower(TurnEffects[i]);
 	}
 
 	for (int i = TurnEffects.Num() - 1; i >= 0; --i)
 	{
 		if (TurnEffects[i].TurnsRemaining <= 0)
-			RemoveTurnEffect(i, false);
+			RemoveTurnEffect(i);
 	}
 
 	Delegate_OnEffectsChanged.Broadcast();

@@ -13,12 +13,12 @@ UCZEffectAsset::UCZEffectAsset()
 	EffectAttribute = PA_Strength;
 	bApplyEffectOnActivate = true;
 	TurnActivationType = TA_Start;
-	bEmpowerValueOnApply = true;
-	bStackDurationOnApply = false;
-	bResetDurationOnApply = false;
-	EffectPower = 1;
-	CurrentEffectPower = 1;
+	TurnEffectType = TUT_None;
+	TurnEffectTarget = TT_Target;
+	Icon = nullptr;
+	EffectPower = DefaultPower = 1;
 	EffectDescription = FString("This is an effect called ") + EffectName;
+	IconColour = FLinearColor::Red;
 }
 
 void UCZEffectAsset::ActivateEffect(AActor* target, AActor* source)
@@ -36,59 +36,57 @@ void UCZEffectAsset::ActivateEffect(AActor* target, AActor* source)
 		Delegate_OnActivated.Broadcast(this);
 	}
 
-	if (EffectDuration <= 0)
-		EndEffect();
-	else
+	if (TurnEffectType == TUT_None)
 	{
-		UActorComponent* comp = nullptr;
+		EndEffect();
+		return;
+	}
+	
+	UActorComponent* comp = nullptr;
+	
+	switch (TurnEffectTarget)
+	{
+	case TT_Source :
+		comp = source->GetComponentByClass(UCZEffectsComponent::StaticClass());
+		break;
+	case TT_Target :
+		comp = target->GetComponentByClass(UCZEffectsComponent::StaticClass());
+		break;
+		default:
+			break;
+	}
+	
+	if (const auto effectComp = Cast<UCZEffectsComponent>(comp))
+	{
+		bool effectStacked = false;
 		
-		switch (TurnEffectTarget)
+		for (int i = effectComp->GetTurnEffects().Num() - 1; i >= 0; --i)
 		{
-		case TT_Source :
-			comp = source->GetComponentByClass(UCZEffectsComponent::StaticClass());
+			// skip if it's the wrong class
+			if (effectComp->GetTurnEffects()[i].Effect->GetClass() != this->GetClass())
+				continue;
+
+			// apply stack effects
+			effectStacked = true;
+
+			if (TurnEffectType == TUT_PowerBased)
+				effectComp->GetTurnEffects()[i].Effect->EmpowerEffect(effectComp->GetTurnEffectsAsRef()[i]);
+			else
+				effectComp->GetTurnEffects()[i].TurnsRemaining = 1;
+			
+			Delegate_OnUpdated.Broadcast({ effectComp->GetTurnEffects()[i].TurnsRemaining, this });
+
 			break;
-		case TT_Target :
-			comp = target->GetComponentByClass(UCZEffectsComponent::StaticClass());
-			break;
-			default:
-				break;
 		}
 		
-		if (const auto effectComp = Cast<UCZEffectsComponent>(comp))
+		if (!effectStacked)
 		{
-			bool effectStacked = false;
+			int EffectDuration = 1;
+
+			if (TurnEffectType == TUT_PowerBased)
+				EffectDuration = EffectPower;
 			
-			for (int i = effectComp->GetTurnEffectsAsRef().Num() - 1; i >= 0; --i)
-			{
-				// skip if it's the wrong class
-				if (effectComp->GetTurnEffects()[i].Effect->GetClass() != this->GetClass())
-					continue;
-				
-				if (!bEmpowerValueOnApply && !bResetDurationOnApply && !bStackDurationOnApply)
-				{
-					effectComp->RemoveTurnEffect(i, false);
-					continue;
-				}
-
-				effectStacked = true;
-				
-				if (bEmpowerValueOnApply)
-					EmpowerEffect(effectComp->GetTurnEffectsAsRef()[i]);
-
-				if (bResetDurationOnApply)
-					effectComp->GetTurnEffectsAsRef()[i].TurnsRemaining = EffectDuration;
-
-				if (bStackDurationOnApply)
-					effectComp->GetTurnEffectsAsRef()[i].TurnsRemaining += EffectDuration;
-
-				Delegate_OnUpdated.Broadcast(this);
-			}
-
-			if (!effectStacked)
-			{
-				CurrentEffectPower = EffectPower;
-				effectComp->AddTurnEffect({EffectDuration, this});
-			}
+			effectComp->AddTurnEffect({EffectDuration, this});
 		}
 	}
 }
@@ -121,6 +119,8 @@ void UCZEffectAsset::ReactivateEffect()
 
 void UCZEffectAsset::EndEffect()
 {
+	EffectPower = DefaultPower;
+	
 	OnEffectEnded();
 
 	Delegate_OnEnded.Broadcast(this);
@@ -130,7 +130,6 @@ FString UCZEffectAsset::GetDescription() const
 {
 	FString FinalDes = EffectDescription;
 
-	FinalDes = FinalDes.Replace(TEXT("<TURNS>"), *FString::FromInt(EffectDuration));
 	FinalDes = FinalDes.Replace(TEXT("<POWER>"), *FString::FromInt(EffectPower));
 	FinalDes = FinalDes.Replace(TEXT("<NAME>"), *EffectName);
 
@@ -181,13 +180,28 @@ FString UCZEffectAsset::GetDescription() const
 	return FinalDes;
 }
 
-void UCZEffectAsset::EmpowerEffect(const FTurnEffect& TurnEffect)
+void UCZEffectAsset::EmpowerEffect(FTurnEffect& TurnEffect)
 {
-	CurrentEffectPower++;
+	EffectPower++;
+	
+	if (TurnEffectType == TUT_PowerBased)
+		TurnEffect.TurnsRemaining = EffectPower;
 	
 	OnEmpower(TurnEffect);
 
-	Delegate_OnUpdated.Broadcast(this);
+	Delegate_OnUpdated.Broadcast(TurnEffect);
+}
+
+void UCZEffectAsset::ReduceEffectPower(FTurnEffect& TurnEffect)
+{
+	EffectPower = FMath::Max(0, EffectPower - 1);
+	
+	if (TurnEffectType == TUT_PowerBased)
+		TurnEffect.TurnsRemaining = EffectPower;
+
+	OnPowerReduced(TurnEffect);
+	
+	Delegate_OnUpdated.Broadcast(TurnEffect);
 }
 
 AActor* UCZEffectAsset::GetSourceOwner() const

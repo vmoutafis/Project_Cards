@@ -15,17 +15,9 @@ class PROJECT_CARDS_API UCZEffect_Armour : public UCZEffectAsset
 	GENERATED_BODY()
 
 public:
-	UCZEffect_Armour();
-
 	int GetScaledArmour() const;
 	
-	virtual FString GetDescription() const override;
-
 protected:
 	virtual void OnEffectActivated() override;
-	
-public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
-	int Armour;
 	
 };

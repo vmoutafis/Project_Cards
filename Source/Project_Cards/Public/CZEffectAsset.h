@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "CZStatsComponent.h"
+#include "CZEffectsComponent.h"
 #include "CZEffectAsset.generated.h"
 
-struct FTurnEffect;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActivated, UCZEffectAsset*, effect);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEnded, UCZEffectAsset*, effect);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdated, UCZEffectAsset*, effect);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnUpdated, FTurnEffect, effect);
 
 UENUM(BlueprintType)
 enum ETurnActivations : uint8
@@ -28,11 +28,19 @@ enum ETargetTypes : uint8
 	TT_Source UMETA(DisplayName="Source")
 };
 
+UENUM(BlueprintType)
+enum ETurnType : uint8
+{
+	TUT_PowerBased = 0 UMETA(DisplayName="Power Based"),
+	TUT_OneTurn UMETA(DisplayName="One Turn"),
+	TUT_None UMETA(DisplayName="None")
+};
+
 /**
  * 
  */
-UCLASS()
-class PROJECT_CARDS_API UCZEffectAsset : public UPrimaryDataAsset
+UCLASS(Blueprintable)
+class PROJECT_CARDS_API UCZEffectAsset : public UObject
 {
 	GENERATED_BODY()
 
@@ -59,7 +67,9 @@ public:
 	UFUNCTION(BlueprintPure, Category=Effect)
 	virtual FString GetDescription() const;
 
-	void EmpowerEffect(const FTurnEffect& TurnEffect);
+	void EmpowerEffect(FTurnEffect& TurnEffect);
+
+	void ReduceEffectPower(FTurnEffect& TurnEffect);
 	
 protected:
 	virtual void OnEffectActivated() {}
@@ -85,6 +95,8 @@ protected:
 
 	virtual void OnEmpower(const FTurnEffect& TurnEffect) {}
 
+	virtual void OnPowerReduced(const FTurnEffect& TurnEffect) {}
+
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
 	FString EffectName;
@@ -97,39 +109,27 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
 	UTexture2D* Icon;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
+	FLinearColor IconColour;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
 	bool bApplyEffectOnActivate;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Turn)
-	int EffectDuration;
+	TEnumAsByte<ETurnType> TurnEffectType;
 
-	// default power to reset too
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Turn)
-	int EffectPower;
-
-	// actual current power that adjusts as empowered
+	int DefaultPower;
+	
 	UPROPERTY(BlueprintReadOnly, Category=Turn)
-	int CurrentEffectPower;
+	int EffectPower;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Turn)
 	TEnumAsByte<ETurnActivations> TurnActivationType;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Turn)
 	TEnumAsByte<ETargetTypes> TurnEffectTarget;
-
-	// increase the power of the effect when reapplied
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Turn|Stack Type")
-	bool bEmpowerValueOnApply;
-
-	// increase the duration of the effect
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Turn|Stack Type")
-	bool bStackDurationOnApply;
-
-	// reset the duration of the effect
-	// this will override stack duration
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Turn|Stack Type")
-	bool bResetDurationOnApply;
 	
 private:
 	UPROPERTY()
