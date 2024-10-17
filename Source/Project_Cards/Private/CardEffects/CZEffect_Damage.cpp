@@ -10,19 +10,27 @@ UCZEffect_Damage::UCZEffect_Damage()
 {
 	Damage = 1;
 	bEmpowerValueOnApply = true;
+	bAddPowerToDamage = true;
 }
 
 FString UCZEffect_Damage::GetDescription() const
 {
-	return FString("Deal ") + FString::FromInt(GetScaledDamage()) + FString(" Damage.");
+	FString FinalDes = Super::GetDescription();
+	
+	return FinalDes = FinalDes.Replace(TEXT("<DAMAGE>"), *FString::FromInt(GetScaledDamage()));
 }
 
 int UCZEffect_Damage::GetScaledDamage() const
 {
-	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
-		return Damage + EffectPower;
+	int FinalDamage = Damage;
 	
-	return (Damage + EffectPower) * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
+	if (bAddPowerToDamage)
+		FinalDamage += CurrentEffectPower;
+	
+	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
+		return FinalDamage;
+	
+	return FinalDamage * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
 }
 
 void UCZEffect_Damage::OnEffectActivated()

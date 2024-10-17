@@ -93,6 +93,9 @@ public:
 	TEnumAsByte<EPrimaryAttributes> EffectAttribute;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
+	FString EffectDescription;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
 	UTexture2D* Icon;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
@@ -101,8 +104,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Turn)
 	int EffectDuration;
 
+	// default power to reset too
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Turn)
 	int EffectPower;
+
+	// actual current power that adjusts as empowered
+	UPROPERTY(BlueprintReadOnly, Category=Turn)
+	int CurrentEffectPower;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Turn)
 	TEnumAsByte<ETurnActivations> TurnActivationType;

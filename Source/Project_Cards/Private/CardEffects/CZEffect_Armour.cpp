@@ -13,14 +13,16 @@ UCZEffect_Armour::UCZEffect_Armour()
 int UCZEffect_Armour::GetScaledArmour() const
 {
 	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
-		return Armour + EffectPower;
+		return Armour + CurrentEffectPower;
 	
-	return (Armour + EffectPower) * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
+	return (Armour + CurrentEffectPower) * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
 }
 
 FString UCZEffect_Armour::GetDescription() const
 {
-	return FString("Gain ") + FString::FromInt(GetScaledArmour()) + FString(" Armour.");
+	FString FinalDes = Super::GetDescription();
+	
+	return FinalDes = FinalDes.Replace(TEXT("<ARMOUR>"), *FString::FromInt(GetScaledArmour()));
 }
 
 void UCZEffect_Armour::OnEffectActivated()

@@ -9,7 +9,7 @@ UCZEffectAsset::UCZEffectAsset()
 {
 	m_target = nullptr;
 	m_source = nullptr;
-	EffectName = "Effect Name";
+	EffectName = FString("Effect Name");
 	EffectAttribute = PA_Strength;
 	bApplyEffectOnActivate = true;
 	TurnActivationType = TA_Start;
@@ -17,6 +17,8 @@ UCZEffectAsset::UCZEffectAsset()
 	bStackDurationOnApply = false;
 	bResetDurationOnApply = false;
 	EffectPower = 1;
+	CurrentEffectPower = 1;
+	EffectDescription = FString("This is an effect called ") + EffectName;
 }
 
 void UCZEffectAsset::ActivateEffect(AActor* target, AActor* source)
@@ -84,7 +86,7 @@ void UCZEffectAsset::ActivateEffect(AActor* target, AActor* source)
 
 			if (!effectStacked)
 			{
-				EffectPower = 1;
+				CurrentEffectPower = EffectPower;
 				effectComp->AddTurnEffect({EffectDuration, this});
 			}
 		}
@@ -126,12 +128,62 @@ void UCZEffectAsset::EndEffect()
 
 FString UCZEffectAsset::GetDescription() const
 {
-	return FString("This is an effect called: ") + EffectName;
+	FString FinalDes = EffectDescription;
+
+	FinalDes = FinalDes.Replace(TEXT("<TURNS>"), *FString::FromInt(EffectDuration));
+	FinalDes = FinalDes.Replace(TEXT("<POWER>"), *FString::FromInt(EffectPower));
+	FinalDes = FinalDes.Replace(TEXT("<NAME>"), *EffectName);
+
+	if (FinalDes.Contains(TEXT("<ACTIVATION>")))
+	{
+		FString ActiveStr = "";
+		
+		switch (TurnActivationType)
+		{
+		case TA_None :
+			ActiveStr = "None";
+			break;
+		case TA_Both :
+			ActiveStr = "Both";
+			break;
+		case TA_Start :
+			ActiveStr = "Start";
+			break;
+		case TA_End :
+			ActiveStr = "End";
+			break;
+			default:
+				break;
+		}
+		
+		FinalDes = FinalDes.Replace(TEXT("<ACTIVATION>"), *ActiveStr);
+	}
+
+	if (FinalDes.Contains(TEXT("<TARGET>")))
+	{
+		FString TargetStr = "";
+		
+		switch (TurnEffectTarget)
+		{
+		case TT_Source :
+			TargetStr = "Self";
+			break;
+		case TT_Target :
+			TargetStr = "Enemy";
+			break;
+			default:
+				break;
+		}
+		
+		FinalDes = FinalDes.Replace(TEXT("<TARGET>"), *TargetStr);
+	}
+	
+	return FinalDes;
 }
 
 void UCZEffectAsset::EmpowerEffect(const FTurnEffect& TurnEffect)
 {
-	EffectPower++;
+	CurrentEffectPower++;
 	
 	OnEmpower(TurnEffect);
 

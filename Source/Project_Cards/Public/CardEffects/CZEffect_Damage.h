@@ -24,7 +24,10 @@ protected:
 	virtual void OnEffectActivated() override;
 	
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Effect)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Damage)
 	int Damage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Damage)
+	bool bAddPowerToDamage;
 	
 };
