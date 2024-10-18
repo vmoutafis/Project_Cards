@@ -3,7 +3,7 @@
 
 #include "CZStatsComponent.h"
 
-#include "CZEffectsComponent.h"
+#include "CZGameInstance.h"
 
 // Sets default values for this component's properties
 UCZStatsComponent::UCZStatsComponent()
@@ -14,8 +14,11 @@ UCZStatsComponent::UCZStatsComponent()
 
 	for (int32 i = 0; i < NUM_PRIM_ATTRIBS; ++i)
 		PrimaryAttributes[i] = 1;
-	
-	// ...
+		
+	for (int32 i = 0; i < NUM_SECOND_ATTRIBS; ++i)
+		SecondaryAttributes[i] = 0;
+
+	bInitGameInstancePrimaryAttributes = false;
 }
 
 int UCZStatsComponent::GetPrimaryAttribute(TEnumAsByte<EPrimaryAttributes> attribute)
@@ -50,17 +53,19 @@ int UCZStatsComponent::SetSecondaryAttribute(const TEnumAsByte<ESecondaryAttribu
 		return -1;
 
 	const uint8 index = attribute.GetIntValue();
-	
+
+	// increment or set
 	if (!increment)
 		SecondaryAttributes[index] = value;
 	else
 		SecondaryAttributes[index] += value;
 
-	if (SecondaryAttributes[index] < 0)
-		SecondaryAttributes[index] = 0;
+	// clamp maximum id needed
+	if (clampMax > -1)
+		SecondaryAttributes[index] = FMath::Min(clampMax, SecondaryAttributes[index]);
 
-	if (clampMax > -1 && SecondaryAttributes[index] > clampMax)
-		SecondaryAttributes[index] = clampMax;
+	// clamp minimum at 0 as no stats should go below anyway
+	SecondaryAttributes[index] = FMath::Max(0, SecondaryAttributes[index]);
 	
 	OnSecondaryAttributeUpdated(attribute, SecondaryAttributes[index]);
 	Delegate_OnSecondaryAttributeUpdated.Broadcast(attribute, SecondaryAttributes[index]);
@@ -76,33 +81,49 @@ int UCZStatsComponent::GetSecondaryAttribute(const TEnumAsByte<ESecondaryAttribu
 	return SecondaryAttributes[attribute.GetIntValue()];
 }
 
-int UCZStatsComponent::AdjustDamageByType(const UDamageType* DamageType, int& DamageValue)
-{
-	if (!IsValid(DamageType) || DamageType->GetClass() == UDamageType::StaticClass())
-		return DamageValue;
-
-	const auto effectsComp = Cast<UCZEffectsComponent>(GetOwner()->GetComponentByClass(UCZEffectsComponent::StaticClass()));
-	
-	if (!IsValid(effectsComp))
-		return DamageValue;
-
-	for (const auto& effect : effectsComp->GetTurnEffects())
-	{
-		// TODO: update damage based on damage types and passive effects
-	}
-	
-	return DamageValue;
-}
-
 void UCZStatsComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (const auto item : DefaultPrimaryAttributes)
-		SetPrimaryAttribute(item.Attribute, item.Value);
+	if (!bInitGameInstancePrimaryAttributes)
+		for (int i = 0; i < DefaultPrimaryAttributes.Num(); ++i)
+			PrimaryAttributes[DefaultPrimaryAttributes[i].Attribute] = DefaultPrimaryAttributes[i].Value;
+	else
+	{
+		if (const auto GI = Cast<UCZGameInstance>(GetWorld()->GetGameInstance()))
+		{
+			for (int i = 0; i < NUM_PRIM_ATTRIBS; ++i)
+				PrimaryAttributes[i] = GI->PrimaryAttributes[i];
+		}
+	}
 
+	int extraHealth = 0;
+	int extraEnergy = 0;
+	
 	for (const auto item : DefaultSecondaryAttributes)
+	{
+		switch (item.Attribute)
+		{
+		case SA_MaxHealth :
+			extraHealth = (GetPrimaryAttribute(PA_Vitality) - 1) * 5;
+			SetSecondaryAttribute(item.Attribute, item.Value + extraHealth);
+			continue;
+		case SA_Health :
+			SetSecondaryAttribute(item.Attribute, item.Value + extraHealth);
+			continue;
+		case SA_MaxEnergy :
+			extraEnergy = FMath::FloorToInt(static_cast<float>(GetPrimaryAttribute(PA_Stamina)) / 5.0f);
+			SetSecondaryAttribute(item.Attribute, item.Value + extraEnergy);
+			continue;
+		case SA_Energy :
+			SetSecondaryAttribute(item.Attribute, item.Value + extraEnergy);
+			continue;
+			default:
+				break;
+		}
+		
 		SetSecondaryAttribute(item.Attribute, item.Value);
+	}
 
 	OnStatsInitialised();
 	Delegate_OnStatsInitialised.Broadcast();

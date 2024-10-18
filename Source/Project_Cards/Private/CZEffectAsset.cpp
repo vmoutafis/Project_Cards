@@ -4,6 +4,7 @@
 #include "CZEffectAsset.h"
 
 #include "CZEffectsComponent.h"
+#include "CZGameInstance.h"
 
 UCZEffectAsset::UCZEffectAsset()
 {
@@ -21,6 +22,11 @@ UCZEffectAsset::UCZEffectAsset()
 	IconColour = FLinearColor::Red;
 }
 
+void UCZEffectAsset::InitialiseEffect()
+{
+	EffectPower = DefaultPower;
+}
+
 void UCZEffectAsset::ActivateEffect(AActor* target, const FVector HitLocation, AActor* source)
 {
 	m_target = target;
@@ -29,9 +35,6 @@ void UCZEffectAsset::ActivateEffect(AActor* target, const FVector HitLocation, A
 	
 	if (!IsValid(m_target) || !IsValid(m_source))
 		return;
-
-	if (TurnEffectType == TUT_None)
-		EffectPower = DefaultPower;
 	
 	if (bApplyEffectOnActivate)
 	{
@@ -86,7 +89,8 @@ void UCZEffectAsset::ActivateEffect(AActor* target, const FVector HitLocation, A
 		if (!effectStacked)
 		{
 			int EffectDuration = 1;
-
+			EffectPower = DefaultPower;
+			
 			if (TurnEffectType == TUT_PowerBased)
 				EffectDuration = EffectPower;
 			
@@ -132,7 +136,7 @@ FString UCZEffectAsset::GetDescription() const
 {
 	FString FinalDes = EffectDescription;
 
-	FinalDes = FinalDes.Replace(TEXT("<POWER>"), *FString::FromInt(EffectPower));
+	FinalDes = FinalDes.Replace(TEXT("<POWER>"), *FString::FromInt(GetScaledEffectPower()));
 	FinalDes = FinalDes.Replace(TEXT("<NAME>"), *EffectName);
 
 	if (FinalDes.Contains(TEXT("<ACTIVATION>")))
@@ -204,6 +208,24 @@ void UCZEffectAsset::ReduceEffectPower(FTurnEffect& TurnEffect)
 	OnPowerReduced(TurnEffect);
 	
 	Delegate_OnUpdated.Broadcast(TurnEffect);
+}
+
+int UCZEffectAsset::GetScaledEffectPower() const
+{
+	if (EffectAttribute == PA_None)
+		return EffectPower;
+
+	if (!IsValid(GetSourceStats()))
+	{
+		if (const auto GI = Cast<UCZGameInstance>(GetWorld()->GetGameInstance()))
+		{
+			return EffectPower * GI->GetPrimaryAttribute(EffectAttribute);	
+		}
+
+		return EffectPower;
+	}
+	
+	return EffectPower * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
 }
 
 AActor* UCZEffectAsset::GetSourceOwner() const

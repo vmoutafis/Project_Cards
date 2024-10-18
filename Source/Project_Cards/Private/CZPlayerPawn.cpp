@@ -359,22 +359,29 @@ void ACZPlayerPawn::DrawMultipleCards(int num)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Drawing multiple cards: %i"), num);
 	m_cardsToDraw = num;
+
+	OnDrawStarted();
+	Delegate_OnDrawStart.Broadcast();
+	
 	TryDrawNextCard();
 }
 
 void ACZPlayerPawn::DrawNextCard()
 {
 	auto cardRef = DrawCardFromDeck(0);
-	
+
+	// if no cards to draw reshuffle the deck
 	if (!IsValid(cardRef))
 	{
 		ReshuffleDeck();
 		cardRef = DrawCardFromDeck(0);
 	}
 
+	// if still no cards end draw
 	if (!IsValid(cardRef))
 	{
-		Delegate_OnHandDrawn.Broadcast();
+		OnDrawComplete();
+		Delegate_OnDrawComplete.Broadcast();
 		return;
 	}
 	
@@ -385,7 +392,8 @@ void ACZPlayerPawn::TryDrawNextCard()
 {
 	if (m_cardsToDraw <= 0)
 	{
-		Delegate_OnHandDrawn.Broadcast();
+		OnDrawComplete();
+		Delegate_OnDrawComplete.Broadcast();
 		return;		
 	}
 

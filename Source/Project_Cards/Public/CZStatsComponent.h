@@ -63,7 +63,7 @@ class PROJECT_CARDS_API UCZStatsComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UCZStatsComponent();
 
@@ -97,10 +97,6 @@ public:
 	UFUNCTION(BlueprintPure, Category=Attributes)
 	int GetSecondaryAttribute(const TEnumAsByte<ESecondaryAttributes> attribute) const;
 
-	// will change the damage based on type and effects
-	UFUNCTION(BlueprintCallable, Category=Damage)
-	int AdjustDamageByType(const UDamageType* DamageType, int& DamageValue);
-	
 protected:
 	virtual void BeginPlay() override;
 
@@ -118,6 +114,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category=Attributes)
 	TArray<FPrimaryAttribute> DefaultPrimaryAttributes;
 
+	UPROPERTY(EditDefaultsOnly, Category=Attributes)
+	bool bInitGameInstancePrimaryAttributes;
+	
 	// set default attribute values
 	UPROPERTY(EditDefaultsOnly, Category=Attributes)
 	TArray<FSecondaryAttribute> DefaultSecondaryAttributes;

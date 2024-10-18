@@ -10,14 +10,6 @@ UCZEffect_Damage::UCZEffect_Damage()
 	DamageType = UDamageType::StaticClass();
 }
 
-int UCZEffect_Damage::GetScaledDamage() const
-{
-	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
-		return EffectPower;
-	
-	return EffectPower * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
-}
-
 void UCZEffect_Damage::OnEffectActivated()
 {
 	Super::OnEffectActivated();
@@ -25,11 +17,27 @@ void UCZEffect_Damage::OnEffectActivated()
 	if (!IsValid(GetTarget()) || !IsValid(GetSource()))
 		return;
 
-	ApplyDamage(GetScaledDamage());
+	ApplyDamage(GetScaledEffectPower());
 }
 
 void UCZEffect_Damage::ApplyDamage(const int Damage)
 {
+	int FinalDamage = Damage;
+	
+	if (!EmpowerEffects.IsEmpty())
+	{
+		const auto& effectComp = Cast<UCZEffectsComponent>(GetTarget()->GetComponentByClass(UCZEffectsComponent::StaticClass()));
+
+		if (IsValid(effectComp))
+		{
+			for (const auto& effect : effectComp->GetTurnEffects())
+			{
+				if (EmpowerEffects.Contains(effect.Effect->GetClass()))
+					OnDamageEmpowered(FinalDamage, effect);
+			}
+		}
+	}
+	
 	FHitResult hit;
 	hit.Location = GetHitLocation();
 
@@ -47,10 +55,15 @@ void UCZEffect_Damage::ApplyDamage(const int Damage)
 	
 	UGameplayStatics::ApplyPointDamage(
 		GetTarget(),
-		static_cast<float>(Damage),
+		static_cast<float>(FinalDamage),
 		GetSource()->GetActorForwardVector(),
 		hit,
 		nullptr,
 		causer,
 		DamageType);
+}
+
+void UCZEffect_Damage::OnDamageEmpowered(int& Damage, const FTurnEffect& Effect)
+{
+	Damage += Effect.TurnsRemaining;
 }

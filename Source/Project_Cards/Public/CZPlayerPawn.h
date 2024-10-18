@@ -12,7 +12,8 @@ class USplineComponent;
 class UCameraComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeckChanged);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHandDrawn);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDrawComplete);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDrawStart);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FNotEnoughEnergy);
 
 UCLASS()
@@ -28,7 +29,10 @@ public:
 	FOnDeckChanged Delegate_OnDeckChanged;
 
 	UPROPERTY(BlueprintAssignable, Category=Hand)
-	FOnHandDrawn Delegate_OnHandDrawn;
+	FOnDrawComplete Delegate_OnDrawComplete;
+
+	UPROPERTY(BlueprintAssignable, Category=Hand)
+	FOnDrawStart Delegate_OnDrawStart;
 
 	UPROPERTY(BlueprintAssignable, Category=Hand)
 	FNotEnoughEnergy Delegate_NotEnoughEnergy;
@@ -138,6 +142,12 @@ protected:
 
 	// draw multiple cards from the deck
 	void DrawMultipleCards(int num);
+
+	UFUNCTION(BlueprintImplementableEvent, Category=Hand)
+	void OnDrawStarted();
+
+	UFUNCTION(BlueprintImplementableEvent, Category=Hand)
+	void OnDrawComplete();
 
 private:
 	void DrawNextCard();

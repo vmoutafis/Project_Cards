@@ -46,7 +46,10 @@ class PROJECT_CARDS_API UCZEffectAsset : public UObject
 
 public:
 	UCZEffectAsset();
-	
+
+	UFUNCTION(BlueprintCallable, Category=Initialise)
+	void InitialiseEffect();
+
 	void ActivateEffect(AActor* target, const FVector HitLocation, AActor* source);
 
 	void TurnStart();
@@ -72,6 +75,8 @@ public:
 	void ReduceEffectPower(FTurnEffect& TurnEffect);
 
 	FVector GetHitLocation() const { return m_targetHitLocation; }
+
+	int GetScaledEffectPower() const;
 	
 protected:
 	virtual void OnEffectActivated() {}

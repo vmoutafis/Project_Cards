@@ -236,10 +236,12 @@ void ACZCard::BeginPlay()
 {
 	Super::BeginPlay();
 
-	for (const auto effect : CardEffects)
+	for (const auto& effect : CardEffects)
 	{
 		auto effectRef = NewObject<UCZEffectAsset>(GetWorld(), effect);
 
+		effectRef->InitialiseEffect();
+		
 		CardEffectsObjects.Add(effectRef);
 	}
 	

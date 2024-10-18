@@ -13,9 +13,6 @@ UCLASS()
 class PROJECT_CARDS_API UCZEffect_Armour : public UCZEffectAsset
 {
 	GENERATED_BODY()
-
-public:
-	int GetScaledArmour() const;
 	
 protected:
 	virtual void OnEffectActivated() override;

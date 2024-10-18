@@ -3,14 +3,6 @@
 
 #include "CardEffects/CZEffect_Armour.h"
 
-int UCZEffect_Armour::GetScaledArmour() const
-{
-	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
-		return EffectPower;
-	
-	return EffectPower * GetSourceStats()->GetPrimaryAttribute(EffectAttribute);
-}
-
 void UCZEffect_Armour::OnEffectActivated()
 {
 	Super::OnEffectActivated();
@@ -18,5 +10,5 @@ void UCZEffect_Armour::OnEffectActivated()
 	if (!IsValid(GetSource()))
 		return;
 
-	GetSourceStats()->SetSecondaryAttribute(SA_Armour, GetScaledArmour(), true);
+	GetSourceStats()->SetSecondaryAttribute(SA_Armour, GetScaledEffectPower(), true);
 }

@@ -16,13 +16,18 @@ class PROJECT_CARDS_API UCZEffect_Damage : public UCZEffectAsset
 public:
 	UCZEffect_Damage();
 	
-	int GetScaledDamage() const;
-	
 protected:
 	virtual void OnEffectActivated() override;
 
-	virtual void ApplyDamage(const int Damage);
+	void ApplyDamage(const int Damage);
 
+	virtual void OnDamageEmpowered(int& Damage, const FTurnEffect& Effect);
+	
+protected:
 	UPROPERTY(EditDefaultsOnly, Category="Damage")
 	TSubclassOf<UDamageType> DamageType;
+
+	// this should be a turn based empowered effect that will empower the damage of this effect
+	UPROPERTY(EditDefaultsOnly, Category="Damage")
+	TArray<TSubclassOf<UCZEffectAsset>> EmpowerEffects;
 };
