@@ -141,7 +141,7 @@ bool ACZCard::DragCard(const FVector location)
 	return true;
 }
 
-bool ACZCard::EndDragCard()
+bool ACZCard::EndDragCard(bool bShouldFail)
 {
 	if (m_cardUsed)
 		return false;
@@ -151,15 +151,18 @@ bool ACZCard::EndDragCard()
 	FHitResult hit;
 	const FVector endTrace = GetActorLocation() + GetActorForwardVector() * 10000.0f;
 	const FCollisionShape shape = FCollisionShape::MakeBox(HitBox->GetScaledBoxExtent() * 0.75f);
-	
-	if (GetWorld()->SweepSingleByChannel(hit, GetActorLocation(), endTrace, GetActorRotation().Quaternion(), EnemyDetection, shape))
-	{
-		if (DebugHit)
-			DrawDebugBox(GetWorld(), hit.ImpactPoint, shape.GetBox(), FColor::Green, false, 3.0f);
 
-		if (hit.GetActor() != GetOwner())
-			if (TryUseCard(hit.GetActor(), hit.ImpactPoint))
-				return true;
+	if (!bShouldFail)
+	{
+		if (GetWorld()->SweepSingleByChannel(hit, GetActorLocation(), endTrace, GetActorRotation().Quaternion(), EnemyDetection, shape))
+		{
+			if (DebugHit)
+				DrawDebugBox(GetWorld(), hit.ImpactPoint, shape.GetBox(), FColor::Green, false, 3.0f);
+
+			if (hit.GetActor() != GetOwner())
+				if (TryUseCard(hit.GetActor(), hit.ImpactPoint))
+					return true;
+		}	
 	}
 
 	ToggleOffsetTransform(false);
@@ -176,7 +179,7 @@ bool ACZCard::TryUseCard(AActor* actorHit, const FVector locationHit)
 	m_hitLocation = locationHit;
 	m_cardUsed = true;
 
-	OnCardActivated();
+	OnCardActivated(actorHit, locationHit);
 	
 	return true;
 }
@@ -201,10 +204,10 @@ void ACZCard::CompleteActivation()
 	Delegate_OnActivateComplete.Broadcast();
 }
 
-void ACZCard::ApplyEffects()
+void ACZCard::ApplyEffects(const FVector HitLocation)
 {
 	for (const auto& effect : CardEffectsObjects)
-		effect->ActivateEffect(GetHitActor(), this);
+		effect->ActivateEffect(GetHitActor(), HitLocation, this);
 }
 
 void ACZCard::StartDiscard(const bool instant)
@@ -221,13 +224,7 @@ void ACZCard::StartDiscard(const bool instant)
 }
 
 void ACZCard::CompleteDiscard()
-{
-	if (const auto player = Cast<ACZPlayerPawn>(GetOwner()))
-	{
-		if (!player->GetDiscardDeck().Contains(this))
-			player->DiscardFromHand(m_handIndex);
-	}
-	
+{	
 	m_discarding = false;
 	ResetCard();
 	OnDiscardComplete();

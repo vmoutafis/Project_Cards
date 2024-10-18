@@ -21,13 +21,17 @@ UCZEffectAsset::UCZEffectAsset()
 	IconColour = FLinearColor::Red;
 }
 
-void UCZEffectAsset::ActivateEffect(AActor* target, AActor* source)
+void UCZEffectAsset::ActivateEffect(AActor* target, const FVector HitLocation, AActor* source)
 {
 	m_target = target;
 	m_source = source;
-
+	m_targetHitLocation = HitLocation;
+	
 	if (!IsValid(m_target) || !IsValid(m_source))
 		return;
+
+	if (TurnEffectType == TUT_None)
+		EffectPower = DefaultPower;
 	
 	if (bApplyEffectOnActivate)
 	{
@@ -119,8 +123,6 @@ void UCZEffectAsset::ReactivateEffect()
 
 void UCZEffectAsset::EndEffect()
 {
-	EffectPower = DefaultPower;
-	
 	OnEffectEnded();
 
 	Delegate_OnEnded.Broadcast(this);

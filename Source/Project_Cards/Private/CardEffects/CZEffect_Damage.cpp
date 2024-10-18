@@ -5,6 +5,11 @@
 #include "CZCard.h"
 #include "Kismet/GameplayStatics.h"
 
+UCZEffect_Damage::UCZEffect_Damage()
+{
+	DamageType = UDamageType::StaticClass();
+}
+
 int UCZEffect_Damage::GetScaledDamage() const
 {
 	if (!IsValid(GetSourceStats()) || EffectAttribute == PA_None)
@@ -20,8 +25,17 @@ void UCZEffect_Damage::OnEffectActivated()
 	if (!IsValid(GetTarget()) || !IsValid(GetSource()))
 		return;
 
+	ApplyDamage(GetScaledDamage());
+}
+
+void UCZEffect_Damage::ApplyDamage(const int Damage)
+{
 	FHitResult hit;
-	hit.Location = GetTarget()->GetActorLocation();
+	hit.Location = GetHitLocation();
+
+	if (TurnEffectType == TUT_None)
+		hit.Location = GetTarget()->GetActorLocation();
+	
 	hit.ImpactPoint = hit.Location;
 	hit.Normal = -GetSource()->GetActorForwardVector();
 	hit.ImpactNormal = hit.Normal;
@@ -33,10 +47,10 @@ void UCZEffect_Damage::OnEffectActivated()
 	
 	UGameplayStatics::ApplyPointDamage(
 		GetTarget(),
-		static_cast<float>(GetScaledDamage()),
+		static_cast<float>(Damage),
 		GetSource()->GetActorForwardVector(),
 		hit,
 		nullptr,
 		causer,
-		UDamageType::StaticClass());
+		DamageType);
 }

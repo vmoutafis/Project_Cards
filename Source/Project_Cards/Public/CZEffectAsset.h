@@ -47,7 +47,7 @@ class PROJECT_CARDS_API UCZEffectAsset : public UObject
 public:
 	UCZEffectAsset();
 	
-	void ActivateEffect(AActor* target, AActor* source);
+	void ActivateEffect(AActor* target, const FVector HitLocation, AActor* source);
 
 	void TurnStart();
 
@@ -70,6 +70,8 @@ public:
 	void EmpowerEffect(FTurnEffect& TurnEffect);
 
 	void ReduceEffectPower(FTurnEffect& TurnEffect);
+
+	FVector GetHitLocation() const { return m_targetHitLocation; }
 	
 protected:
 	virtual void OnEffectActivated() {}
@@ -137,4 +139,6 @@ private:
 
 	UPROPERTY()
 	AActor* m_source;
+
+	FVector m_targetHitLocation;
 };

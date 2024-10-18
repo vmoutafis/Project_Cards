@@ -4,6 +4,7 @@
 #include "CZPlayerPawn.h"
 
 #include "CZCard.h"
+#include "CZStatsComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/SplineComponent.h"
@@ -174,11 +175,17 @@ void ACZPlayerPawn::StopDraggingCard()
 	{
 		const int cost = m_hoveredCard->GetCost();
 		const int handIndex = m_hoveredCard->GetHandIndex();
-		
-		if (m_hoveredCard->EndDragCard())
+
+		if (const auto statsComp = Cast<UCZStatsComponent>(GetComponentByClass(UCZStatsComponent::StaticClass())))
 		{
-			OnCardActivated(cost);
-			DiscardFromHand(handIndex);
+			if (cost > statsComp->GetSecondaryAttribute(SA_Energy))
+				Delegate_NotEnoughEnergy.Broadcast();
+			
+			if (m_hoveredCard->EndDragCard(cost > statsComp->GetSecondaryAttribute(SA_Energy)))
+			{
+				OnCardActivated(cost);
+				DiscardFromHand(handIndex);
+			}
 		}
 	}
 

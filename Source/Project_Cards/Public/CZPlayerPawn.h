@@ -13,6 +13,7 @@ class UCameraComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeckChanged);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHandDrawn);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FNotEnoughEnergy);
 
 UCLASS()
 class PROJECT_CARDS_API ACZPlayerPawn : public APawn
@@ -28,6 +29,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category=Hand)
 	FOnHandDrawn Delegate_OnHandDrawn;
+
+	UPROPERTY(BlueprintAssignable, Category=Hand)
+	FNotEnoughEnergy Delegate_NotEnoughEnergy;
 
 	// check if the deck is empty
 	UFUNCTION(BlueprintPure, Category=Deck)

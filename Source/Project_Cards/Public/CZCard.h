@@ -105,7 +105,7 @@ public:
 	bool DragCard(const FVector location);
 
 	UFUNCTION(BlueprintCallable, Category=Card)
-	bool EndDragCard();
+	bool EndDragCard(bool bShouldFail = false);
 
 	UFUNCTION(BlueprintCallable, Category=Card)
 	bool TryUseCard(AActor* actorHit, const FVector locationHit);
@@ -141,7 +141,7 @@ public:
 	void OnDiscardComplete();
 
 	UFUNCTION(BlueprintCallable, Category=Effects)
-	void ApplyEffects();
+	void ApplyEffects(const FVector HitLocation);
 
 	// if instant is true the function auto runs CompleteDiscard()
 	// if instant is not true you must run CompleteDiscard() to complete the discard
@@ -172,7 +172,7 @@ protected:
 
 	// card was successfully activated
 	UFUNCTION(BlueprintImplementableEvent, Category=Card)
-	void OnCardActivated();
+	void OnCardActivated(AActor* actorHit, const FVector locationHit);
 
 	// card was reset to default state
     UFUNCTION(BlueprintImplementableEvent, Category=Card)
@@ -230,7 +230,7 @@ protected:
 	// index for the card in the hand
 	int m_handIndex;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, Category=Effects)
 	TArray<UCZEffectAsset*> CardEffectsObjects;
 	
 private:
