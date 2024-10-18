@@ -149,6 +149,8 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category=Hand)
 	void OnDrawComplete();
 
+	virtual void Tick(float DeltaSeconds) override;
+
 private:
 	void DrawNextCard();
 

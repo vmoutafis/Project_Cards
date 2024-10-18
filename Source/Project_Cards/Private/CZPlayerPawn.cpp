@@ -8,6 +8,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/SplineComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ACZPlayerPawn::ACZPlayerPawn()
@@ -118,19 +119,28 @@ void ACZPlayerPawn::HoverHand()
 	
 	FHitResult hit;
 	const auto pc = Cast<APlayerController>(GetController());
+
+	bool hitDetected = false;
 	
-	if (!pc->GetHitResultUnderCursorByChannel(CardDetectChannel, false, hit))
-	{		
-		if (!pc->GetHitResultUnderFingerByChannel(ETouchIndex::Touch1, CardDetectChannel, false, hit))
+	if (UGameplayStatics::GetPlatformName().Equals(FString(TEXT("Android"))) ||
+		UGameplayStatics::GetPlatformName().Equals(FString(TEXT("IOS"))))
+	{
+		hitDetected = pc->GetHitResultUnderFingerByChannel(ETouchIndex::Touch1, CardDetectChannel, false, hit);
+	}
+	else
+	{
+		hitDetected = pc->GetHitResultUnderCursorByChannel(CardDetectChannel, false, hit);
+	}
+	
+	if (!hitDetected)
+	{
+		if (IsValid(m_hoveredCard))
 		{
-			if (IsValid(m_hoveredCard))
-			{
-				m_hoveredCard->ToggleHighlight(false);
-				m_hoveredCard = nullptr;
-			}
-			
-			return;
+			m_hoveredCard->ToggleHighlight(false);
+			m_hoveredCard = nullptr;
 		}
+		
+		return;
 	}
 
 	if (DebugHand)
@@ -366,6 +376,13 @@ void ACZPlayerPawn::DrawMultipleCards(int num)
 	TryDrawNextCard();
 }
 
+void ACZPlayerPawn::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	HoverHand();
+}
+
 void ACZPlayerPawn::DrawNextCard()
 {
 	auto cardRef = DrawCardFromDeck(0);
@@ -409,13 +426,23 @@ void ACZPlayerPawn::HandleCardDrag()
 	FHitResult hit;
 
 	const auto pc = Cast<APlayerController>(GetController());
+
+	bool hitDetected = false;
 	
-	if (!pc->GetHitResultUnderCursorByChannel(FieldDetectChannel, false, hit))
+	if (UGameplayStatics::GetPlatformName().Equals(FString(TEXT("Android"))) ||
+		UGameplayStatics::GetPlatformName().Equals(FString(TEXT("IOS"))))
 	{
-		if (!pc->GetHitResultUnderFingerByChannel(ETouchIndex::Touch1, FieldDetectChannel, false, hit))
-		{
-			return;
-		}
+		hitDetected = pc->GetHitResultUnderFingerByChannel(ETouchIndex::Touch1, FieldDetectChannel, false, hit);
+	}
+	else
+	{
+		hitDetected = pc->GetHitResultUnderCursorByChannel(FieldDetectChannel, false, hit);
+	}
+	
+	if (!hitDetected)
+	{
+		StopDraggingCard();
+		return;
 	}
 
 	m_hoveredCard->DragCard(hit.Location);
