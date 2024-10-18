@@ -3,6 +3,8 @@
 
 #include "CZStatsComponent.h"
 
+#include "CZEffectsComponent.h"
+
 // Sets default values for this component's properties
 UCZStatsComponent::UCZStatsComponent()
 {
@@ -72,6 +74,24 @@ int UCZStatsComponent::GetSecondaryAttribute(const TEnumAsByte<ESecondaryAttribu
 		return -1;
 
 	return SecondaryAttributes[attribute.GetIntValue()];
+}
+
+int UCZStatsComponent::AdjustDamageByType(const UDamageType* DamageType, int& DamageValue)
+{
+	if (!IsValid(DamageType) || DamageType->GetClass() == UDamageType::StaticClass())
+		return DamageValue;
+
+	const auto effectsComp = Cast<UCZEffectsComponent>(GetOwner()->GetComponentByClass(UCZEffectsComponent::StaticClass()));
+	
+	if (!IsValid(effectsComp))
+		return DamageValue;
+
+	for (const auto& effect : effectsComp->GetTurnEffects())
+	{
+		// TODO: update damage based on damage types and passive effects
+	}
+	
+	return DamageValue;
 }
 
 void UCZStatsComponent::BeginPlay()

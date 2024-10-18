@@ -96,6 +96,10 @@ public:
 	// get the value of the secondary attribute
 	UFUNCTION(BlueprintPure, Category=Attributes)
 	int GetSecondaryAttribute(const TEnumAsByte<ESecondaryAttributes> attribute) const;
+
+	// will change the damage based on type and effects
+	UFUNCTION(BlueprintCallable, Category=Damage)
+	int AdjustDamageByType(const UDamageType* DamageType, int& DamageValue);
 	
 protected:
 	virtual void BeginPlay() override;
